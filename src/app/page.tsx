@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import { useState, useEffect, FormEvent, ChangeEvent, useCallback } from 'react';
 import { useSession, signIn, signOut } from "next-auth/react";
 
 // 데이터 타입 정의
@@ -22,6 +22,13 @@ interface Issue {
 interface Repo {
   id: number;
   name: string;
+}
+
+interface UpdatePayload {
+  repo: string;
+  labels?: string[];
+  state?: string;
+  state_reason?: string;
 }
 
 export default function HomePage() {
@@ -52,13 +59,14 @@ export default function HomePage() {
       if (!response.ok) throw new Error('Failed to fetch repositories.');
       const data = await response.json();
       setAllRepos(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
     }
   };
 
   // 특정 레포지토리의 이슈 목록 불러오기
-  const fetchIssues = async (repoName: string) => {
+  const fetchIssues = useCallback(async (repoName: string) => {
     if (!repoName) return;
     setIsLoading(true);
     setError(null);
@@ -67,12 +75,13 @@ export default function HomePage() {
       if (!response.ok) throw new Error('Failed to fetch issues.');
       const data = await response.json();
       setIssues(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page]);
 
   // 새 항목(Task/Note) 생성
   const handleCreateIssue = async (e: FormEvent, issueType: 'Task' | 'Note') => {
@@ -93,8 +102,9 @@ export default function HomePage() {
       setNewIssueTitle('');
       setNewIssueBody('');
       await fetchIssues(selectedRepo);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +120,7 @@ export default function HomePage() {
 
     setIsLoading(true);
     let newLabels = issue.labels.map(l => l.name);
-    let updatePayload: any = { repo: selectedRepo }; // repo 정보 추가
+    const updatePayload: UpdatePayload = { repo: selectedRepo }; // repo 정보 추가
 
     if (newState === 'DOING') {
       newLabels = newLabels.filter(name => name !== 'TODO');
@@ -133,8 +143,33 @@ export default function HomePage() {
       if (!response.ok) throw new Error('Failed to update issue state.');
 
       await fetchIssues(selectedRepo);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 이슈 닫기 (삭제)
+  const handleCloseIssue = async (issueNumber: number, reason: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/issues/${issueNumber}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          repo: selectedRepo,
+          state: 'closed',
+          state_reason: reason 
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to close issue.');
+
+      await fetchIssues(selectedRepo);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -168,8 +203,9 @@ export default function HomePage() {
       setPendingReason('');
       setPendingIssue(null);
       await fetchIssues(selectedRepo);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -187,11 +223,11 @@ export default function HomePage() {
     } else {
       setIssues([]);
     }
-  }, [selectedRepo]);
+  }, [selectedRepo, fetchIssues]);
 
   useEffect(() => {
     if (selectedRepo) fetchIssues(selectedRepo);
-  }, [page]);
+  }, [page, selectedRepo, fetchIssues]);
 
 
   // --- UI 렌더링 ---
@@ -230,7 +266,7 @@ export default function HomePage() {
             <>
               <hr style={{ margin: '20px 0' }}/>
               <div style={{ marginBottom: '30px' }}>
-                <h2>새 항목 만들기 (in '{selectedRepo}')</h2>
+                <h2>새 항목 만들기 (in &apos;{selectedRepo}&apos;)</h2>
                 <form onSubmit={(e) => e.preventDefault()}>
                   <input type="text" value={newIssueTitle} onChange={(e) => setNewIssueTitle(e.target.value)} placeholder="제목" style={{ width: '100%', padding: '8px', boxSizing: 'border-box', marginBottom: '10px' }}/>
                   <textarea value={newIssueBody} onChange={(e) => setNewIssueBody(e.target.value)} placeholder="상세 내용 (선택 사항)" style={{ width: '100%', minHeight: '80px', padding: '8px', boxSizing: 'border-box', marginBottom: '10px' }}/>
@@ -309,7 +345,7 @@ export default function HomePage() {
         {isPendingModalOpen && pendingIssue && (
             <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <div style={{ background: 'white', padding: '20px', borderRadius: '5px', width: '400px' }}>
-                <h3>'{pendingIssue.title}' 보류 사유</h3>
+                <h3>&apos;{pendingIssue.title}&apos; 보류 사유</h3>
                 <form onSubmit={handleConfirmPending}>
                   <textarea value={pendingReason} onChange={(e) => setPendingReason(e.target.value)} placeholder="보류하는 이유를 입력하세요..." style={{ width: '100%', minHeight: '100px', boxSizing: 'border-box' }} required />
                   <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
