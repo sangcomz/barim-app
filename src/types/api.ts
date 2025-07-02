@@ -26,3 +26,8 @@ export interface UpdateIssueRequest {
 export interface CreateCommentRequest {
     body: string;
 }
+
+// Dynamic route params for Next.js 15+
+export interface IssueParams {
+    issue_number: string;
+}

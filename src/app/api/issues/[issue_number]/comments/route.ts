@@ -2,12 +2,12 @@ import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import type { CustomSession } from "@/types/api";
+import type { CustomSession, IssueParams } from "@/types/api";
 
 // POST: 특정 이슈에 새로운 댓글 생성
 export async function POST(
     request: Request,
-    { params }: { params: { issue_number: string } }
+    { params }: { params: Promise<IssueParams> }
 ) {
     const session: CustomSession | null = await getServerSession(authOptions);
     if (!session || !session.accessToken) {
@@ -15,7 +15,8 @@ export async function POST(
     }
 
     const octokit = new Octokit({ auth: session.accessToken });
-    const issue_number = parseInt(params.issue_number, 10);
+    const { issue_number } = await params;
+    const issue_number_int = parseInt(issue_number, 10);
     const { body } = await request.json();
 
     if (!body) {
@@ -29,7 +30,7 @@ export async function POST(
         const { data: newComment } = await octokit.rest.issues.createComment({
             owner,
             repo: "barim-data", // 저장소 이름
-            issue_number,
+            issue_number: issue_number_int,
             body,
         });
 
