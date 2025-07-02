@@ -1,11 +1,8 @@
 import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
-
-interface CustomSession {
-    accessToken?: string;
-}
+import { authOptions } from "@/lib/auth";
+import type { CustomSession } from "@/types/api";
 
 // 랜덤 색상 생성 함수
 const getRandomColor = () => Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');

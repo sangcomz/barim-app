@@ -1,11 +1,8 @@
 import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]/route";
-
-interface CustomSession {
-    accessToken?: string;
-}
+import { authOptions } from "@/lib/auth";
+import type { CustomSession } from "@/types/api";
 
 // PATCH: 특정 이슈의 상태 및 라벨을 업데이트
 export async function PATCH(

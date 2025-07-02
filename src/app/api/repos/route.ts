@@ -1,11 +1,8 @@
 import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
-
-interface CustomSession {
-    accessToken?: string;
-}
+import { authOptions } from "@/lib/auth";
+import type { CustomSession } from "@/types/api";
 
 export async function GET() {
     const session: CustomSession | null = await getServerSession(authOptions);
