@@ -1,20 +1,20 @@
 import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import type { CustomSession } from "@/types/api";
+import { requireAuth } from "@/lib/auth-utils";
 
 // 랜덤 색상 생성 함수
 const getRandomColor = () => Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
 
 // GET: 이슈 목록 불러오기 (완료된 항목 포함하도록 수정)
 export async function GET(request: Request) {
-    const session: CustomSession | null = await getServerSession(authOptions);
-    if (!session || !session.accessToken) {
-        return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+    const auth = await requireAuth(request);
+    if (!auth) {
+        return NextResponse.json({ 
+            message: "Not authenticated. Please provide a valid session or Authorization header." 
+        }, { status: 401 });
     }
 
-    const octokit = new Octokit({ auth: session.accessToken });
+    const octokit = new Octokit({ auth: auth.token });
     const { searchParams } = new URL(request.url);
     const repo = searchParams.get('repo');
     const page = searchParams.get('page') || '1';
@@ -40,25 +40,32 @@ export async function GET(request: Request) {
             issue.state === 'open' || issue.state_reason === 'completed'
         );
 
-        return NextResponse.json(filteredIssues);
+        return NextResponse.json({
+            issues: filteredIssues,
+            meta: {
+                authSource: auth.fromSession ? "session" : "header",
+                totalCount: filteredIssues.length,
+                page: parseInt(page),
+                repo,
+                owner
+            }
+        });
     } catch (error) {
-        console.error(error);
+        console.error("Error fetching issues:", error);
         return NextResponse.json({ message: "Error fetching issues" }, { status: 500 });
     }
 }
 
 // POST: 특정 레포에 새로운 이슈(Task/Note) 생성
-// src/app/api/issues/route.ts 파일의 POST 함수
-
-// src/app/api/issues/route.ts 파일의 POST 함수
-
 export async function POST(request: Request) {
-    const session: CustomSession | null = await getServerSession(authOptions);
-    if (!session || !session.accessToken) {
-        return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+    const auth = await requireAuth(request);
+    if (!auth) {
+        return NextResponse.json({ 
+            message: "Not authenticated. Please provide a valid session or Authorization header." 
+        }, { status: 401 });
     }
 
-    const octokit = new Octokit({ auth: session.accessToken });
+    const octokit = new Octokit({ auth: auth.token });
     const { title, body, repo, issueType } = await request.json(); // issueType: 'Task' 또는 'Note'
 
     if (!title || !repo || !issueType) {
@@ -119,9 +126,16 @@ export async function POST(request: Request) {
             body,
             labels: labelsToAdd,
         });
-        return NextResponse.json(newIssue, { status: 201 });
+        
+        return NextResponse.json({
+            issue: newIssue,
+            meta: {
+                authSource: auth.fromSession ? "session" : "header",
+                createdBy: owner
+            }
+        }, { status: 201 });
     } catch (error) {
-        console.error(error);
+        console.error("Error creating issue:", error);
         return NextResponse.json(
             { message: "Error creating issue" },
             { status: 500 }

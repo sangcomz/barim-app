@@ -1,16 +1,16 @@
 import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import type { CustomSession } from "@/types/api";
+import { requireAuth } from "@/lib/auth-utils";
 
-export async function GET() {
-    const session: CustomSession | null = await getServerSession(authOptions);
-    if (!session || !session.accessToken) {
-        return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+export async function GET(request: Request) {
+    const auth = await requireAuth(request);
+    if (!auth) {
+        return NextResponse.json({ 
+            message: "Not authenticated. Please provide a valid session or Authorization header." 
+        }, { status: 401 });
     }
 
-    const octokit = new Octokit({ auth: session.accessToken });
+    const octokit = new Octokit({ auth: auth.token });
 
     try {
         const { data: repos } = await octokit.rest.repos.listForAuthenticatedUser({
@@ -18,9 +18,17 @@ export async function GET() {
             sort: "updated",
             per_page: 100, // 최대 100개까지
         });
-        return NextResponse.json(repos);
+        
+        // 응답에 인증 방식 정보 추가 (디버깅용)
+        return NextResponse.json({
+            repos,
+            meta: {
+                authSource: auth.fromSession ? "session" : "header",
+                totalCount: repos.length
+            }
+        });
     } catch (error) {
-        console.error(error);
+        console.error("Error fetching repositories:", error);
         return NextResponse.json({ message: "Error fetching repositories" }, { status: 500 });
     }
 }

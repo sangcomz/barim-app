@@ -58,7 +58,8 @@ export default function HomePage() {
       const response = await fetch('/api/repos');
       if (!response.ok) throw new Error('Failed to fetch repositories.');
       const data = await response.json();
-      setAllRepos(data);
+      // API 응답 구조가 변경됨: { repos: [...], meta: {...} }
+      setAllRepos(data.repos || data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
@@ -74,7 +75,8 @@ export default function HomePage() {
       const response = await fetch(`/api/issues?repo=${repoName}&page=${page}`);
       if (!response.ok) throw new Error('Failed to fetch issues.');
       const data = await response.json();
-      setIssues(data);
+      // API 응답 구조가 변경됨: { issues: [...], meta: {...} }
+      setIssues(data.issues || data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);

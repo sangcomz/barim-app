@@ -1,25 +1,28 @@
 import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
-import type { CustomSession, IssueParams } from "@/types/api";
+import { requireAuth } from "@/lib/auth-utils";
 
 // PATCH: 특정 이슈의 상태 및 라벨을 업데이트
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<IssueParams> }
+    { params }: { params: { issue_number: string } }
 ) {
-    const session: CustomSession | null = await getServerSession(authOptions);
-    if (!session || !session.accessToken) {
-        return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+    const auth = await requireAuth(request);
+    if (!auth) {
+        return NextResponse.json({ 
+            message: "Not authenticated. Please provide a valid session or Authorization header." 
+        }, { status: 401 });
     }
 
-    const octokit = new Octokit({ auth: session.accessToken });
-    const { issue_number } = await params;
-    const issue_number_int = parseInt(issue_number, 10);
+    const octokit = new Octokit({ auth: auth.token });
+    const issue_number = parseInt(params.issue_number, 10);
 
-    // body에서 업데이트할 정보들을 받음 (state, state_reason, labels 등)
+    // body에서 업데이트할 정보들을 받음 (state, state_reason, labels, repo 등)
     const updateData = await request.json();
+    const { repo, ...issueUpdateData } = updateData;
+
+    // repo가 제공되지 않은 경우 기본값 사용
+    const repositoryName = repo || "barim-data";
 
     try {
         const { data: user } = await octokit.rest.users.getAuthenticated();
@@ -27,14 +30,21 @@ export async function PATCH(
 
         const { data: updatedIssue } = await octokit.rest.issues.update({
             owner,
-            repo: "barim-data", // 실제로는 이 부분도 동적으로 받아오는 것이 좋습니다.
-            issue_number: issue_number_int,
-            ...updateData, // 받은 데이터를 그대로 전달하여 업데이트
+            repo: repositoryName,
+            issue_number,
+            ...issueUpdateData, // 받은 데이터를 그대로 전달하여 업데이트
         });
 
-        return NextResponse.json(updatedIssue);
+        return NextResponse.json({
+            issue: updatedIssue,
+            meta: {
+                authSource: auth.fromSession ? "session" : "header",
+                updatedBy: owner,
+                repository: repositoryName
+            }
+        });
     } catch (error) {
-        console.error(error);
+        console.error("Error updating issue:", error);
         return NextResponse.json(
             { message: "Error updating issue" },
             { status: 500 }
