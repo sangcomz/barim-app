@@ -653,16 +653,37 @@ export default function HomePage() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
       {/* Header */}
-      <header className="sticky top-0 z-40 mb-8" style={{
-        background: 'var(--card)', 
+      <header className="sticky top-0 z-40 mb-6" style={{
+        background: 'var(--card)',
         borderBottom: '1px solid var(--border)'
       }}>
         <div className="container mx-auto">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Barim</h1>
               <div className="text-sm" style={{ color: 'var(--secondary)' }}>
                 {session.user?.name}님, 안녕하세요!
+              </div>
+
+              {/* Project Selector */}
+              <div className="flex items-center gap-4">
+                <select
+                  value={selectedRepo}
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedRepo(e.target.value)}
+                  className="select text-sm"
+                  style={{ minWidth: '200px' }}
+                >
+                  <option value="">-- 프로젝트 선택 --</option>
+                  {allRepos.map(repo => (
+                    <option key={repo.id} value={repo.name}>{repo.name}</option>
+                  ))}
+                </select>
+
+                {selectedRepo && (
+                  <div className="text-sm" style={{ color: 'var(--secondary)' }}>
+                    {tasks.length}개 작업 · {issues.filter(i => i.labels.some(l => l.name === 'Note')).length}개 노트
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -676,32 +697,6 @@ export default function HomePage() {
       </header>
 
       <div className="container mx-auto py-6">
-        {/* Project Selector */}
-        <div className="card mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 max-w-md">
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                프로젝트 선택
-              </label>
-              <select 
-                value={selectedRepo} 
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedRepo(e.target.value)}
-                className="select"
-              >
-                <option value="">-- 프로젝트를 선택하세요 --</option>
-                {allRepos.map(repo => (
-                  <option key={repo.id} value={repo.name}>{repo.name}</option>
-                ))}
-              </select>
-            </div>
-            {selectedRepo && (
-              <div className="text-sm" style={{ color: 'var(--secondary)' }}>
-                {tasks.length}개 작업, {issues.filter(i => i.labels.some(l => l.name === 'Note')).length}개 노트
-              </div>
-            )}
-          </div>
-        </div>
-
         {selectedRepo && (
           <>
             {/* Create New Item */}
