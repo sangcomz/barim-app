@@ -290,7 +290,6 @@ function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
   const isTodo = labels.includes('TODO');
   const isDoing = labels.includes('DOING');
   const isDone = labels.includes('DONE');
-  const isPending = labels.includes('PENDING');
 
   return (
     <div className={`card mb-4 ${isDone ? 'opacity-60' : ''} ${isTask ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-purple-500'}`}>
@@ -835,7 +834,7 @@ export default function HomePage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="card w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold mb-4">
-              '{pendingIssue.title}' 보류 사유
+              {pendingIssue.title} 보류 사유
             </h3>
             <form onSubmit={handleConfirmPending}>
               <textarea 
