@@ -2,6 +2,8 @@ import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-utils";
 
+// 주의: 이 API는 외부 호출 또는 관리 목적으로만 사용됩니다.
+// 실제 앱에서는 barim-data 레포지토리만 사용합니다.
 export async function GET(request: Request) {
     const auth = await requireAuth(request);
     if (!auth) {

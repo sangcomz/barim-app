@@ -2,10 +2,67 @@ import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-utils";
 
+// 고정 레포지토리 이름 (물리적 저장소)
+const PHYSICAL_REPO = "barim-data";
+
 // 랜덤 색상 생성 함수
 const getRandomColor = () => Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
 
-// GET: 이슈 목록 불러오기 (완료된 항목 포함하도록 수정)
+// GitHub 라벨 타입 정의
+interface GitHubLabel {
+    id: number;
+    name: string;
+    color: string;
+    description?: string;
+}
+
+// GitHub 이슈 타입 정의
+interface GitHubIssue {
+    id: number;
+    number: number;
+    title: string;
+    body?: string;
+    state: string;
+    state_reason?: string;
+    labels: GitHubLabel[];
+}
+
+// barim-data 레포지토리가 존재하는지 확인하고, 없으면 생성
+async function ensureBarimDataRepo(octokit: Octokit, owner: string) {
+    try {
+        // 레포지토리 존재 확인
+        await octokit.rest.repos.get({
+            owner,
+            repo: PHYSICAL_REPO,
+        });
+        console.log(`Repository ${PHYSICAL_REPO} already exists`);
+        return true;
+    } catch (error: unknown) {
+        const err = error as { status?: number };
+        if (err.status === 404) {
+            // 레포지토리가 없으면 생성
+            console.log(`Repository ${PHYSICAL_REPO} not found, creating...`);
+            try {
+                await octokit.rest.repos.createForAuthenticatedUser({
+                    name: PHYSICAL_REPO,
+                    description: "Personal task and note management repository for Barim app",
+                    private: false, // 공개 레포로 생성 (원하면 true로 변경)
+                    auto_init: true, // README.md 자동 생성
+                });
+                console.log(`Repository ${PHYSICAL_REPO} created successfully`);
+                return true;
+            } catch (createError) {
+                console.error(`Error creating repository ${PHYSICAL_REPO}:`, createError);
+                throw createError;
+            }
+        } else {
+            console.error(`Error checking repository ${PHYSICAL_REPO}:`, error);
+            throw error;
+        }
+    }
+}
+
+// GET: barim-data 레포에서 특정 프로젝트 라벨의 이슈들만 필터링해서 가져오기
 export async function GET(request: Request) {
     const auth = await requireAuth(request);
     if (!auth) {
@@ -16,37 +73,49 @@ export async function GET(request: Request) {
 
     const octokit = new Octokit({ auth: auth.token });
     const { searchParams } = new URL(request.url);
-    const repo = searchParams.get('repo');
+    const projectLabel = searchParams.get('repo'); // 필터링할 프로젝트 라벨
     const page = searchParams.get('page') || '1';
 
-    if (!repo) {
-        return NextResponse.json({ message: "Repository name is required" }, { status: 400 });
+    if (!projectLabel) {
+        return NextResponse.json({ message: "Project name (repo) is required for filtering" }, { status: 400 });
     }
 
     try {
         const { data: user } = await octokit.rest.users.getAuthenticated();
         const owner = user.login;
 
+        // barim-data 레포지토리 존재 확인 및 생성
+        await ensureBarimDataRepo(octokit, owner);
+
         const { data: issues } = await octokit.rest.issues.listForRepo({
             owner,
-            repo,
-            state: "all", // ✨ 'open' -> 'all'로 변경하여 모든 상태의 이슈를 가져옴
-            per_page: 10,
+            repo: PHYSICAL_REPO,
+            state: "all",
+            per_page: 100, // 더 많이 가져와서 필터링
             page: parseInt(page),
         });
 
-        // ✨ 가져온 이슈들 중, 상태가 'open'이거나 'completed' 사유로 닫힌 것만 필터링
-        const filteredIssues = issues.filter(issue =>
-            issue.state === 'open' || issue.state_reason === 'completed'
-        );
+        // 선택한 프로젝트 라벨이 있는 이슈들만 필터링
+        const projectIssues = (issues as GitHubIssue[]).filter(issue => {
+            const hasProjectLabel = issue.labels.some(label => 
+                label.name === projectLabel
+            );
+            const isValidState = issue.state === 'open' || issue.state_reason === 'completed';
+            return hasProjectLabel && isValidState;
+        });
+
+        // 페이지네이션 적용 (필터링 후)
+        const startIndex = (parseInt(page) - 1) * 10;
+        const paginatedIssues = projectIssues.slice(startIndex, startIndex + 10);
 
         return NextResponse.json({
-            issues: filteredIssues,
+            issues: paginatedIssues,
             meta: {
                 authSource: auth.fromSession ? "session" : "header",
-                totalCount: filteredIssues.length,
+                totalCount: projectIssues.length,
                 page: parseInt(page),
-                repo,
+                projectLabel,
+                physicalRepo: PHYSICAL_REPO,
                 owner
             }
         });
@@ -56,7 +125,7 @@ export async function GET(request: Request) {
     }
 }
 
-// POST: 특정 레포에 새로운 이슈(Task/Note) 생성
+// POST: barim-data 레포에 선택한 프로젝트 라벨을 달고 새로운 이슈(Task/Note) 생성
 export async function POST(request: Request) {
     const auth = await requireAuth(request);
     if (!auth) {
@@ -66,11 +135,11 @@ export async function POST(request: Request) {
     }
 
     const octokit = new Octokit({ auth: auth.token });
-    const { title, body, repo, issueType } = await request.json(); // issueType: 'Task' 또는 'Note'
+    const { title, body, issueType, repo: projectLabel } = await request.json();
 
-    if (!title || !repo || !issueType) {
+    if (!title || !issueType || !projectLabel) {
         return NextResponse.json(
-            { message: "Title, repo, and issueType are required" },
+            { message: "Title, issueType, and repo (project label) are required" },
             { status: 400 }
         );
     }
@@ -79,49 +148,64 @@ export async function POST(request: Request) {
         const { data: user } = await octokit.rest.users.getAuthenticated();
         const owner = user.login;
 
-        // 1. 레포지토리의 기존 라벨 목록을 가져옵니다.
-        const { data: existingLabels } = await octokit.rest.issues.listLabelsForRepo({
-            owner,
-            repo,
-        });
+        // barim-data 레포지토리 존재 확인 및 생성
+        await ensureBarimDataRepo(octokit, owner);
+
+        // 기존 라벨 목록 확인
+        let existingLabels: GitHubLabel[] = [];
+        try {
+            const labelResponse = await octokit.rest.issues.listLabelsForRepo({
+                owner,
+                repo: PHYSICAL_REPO,
+            });
+            existingLabels = labelResponse.data as GitHubLabel[];
+        } catch {
+            // 라벨을 가져올 수 없으면 빈 배열로 초기화
+            existingLabels = [];
+        }
+        
         const existingLabelNames = existingLabels.map(label => label.name);
 
-        // 2. 필요한 라벨들이 없으면 새로 생성합니다. (Task 라벨 추가)
+        // 필요한 라벨들 정의 (선택한 프로젝트 라벨 포함)
         const labelsToEnsure = [
-            { name: repo, color: getRandomColor(), description: `Issues from ${repo}` },
+            { name: projectLabel, color: getRandomColor(), description: `Issues from ${projectLabel} project` },
             { name: 'Note', color: 'fbca04', description: 'Simple note' },
             { name: 'Task', color: '0075ca', description: 'A task that needs to be done' },
-            // ⬇️ 상태 라벨들 추가
             { name: 'TODO', color: 'd876e3', description: 'Task to be done' },
             { name: 'DOING', color: '008672', description: 'Task in progress' },
             { name: 'DONE', color: '0e8a16', description: 'Task completed' },
             { name: 'PENDING', color: 'b33a3a', description: 'Task is pending' },
         ];
 
+        // 필요한 라벨들이 없으면 생성
         for (const label of labelsToEnsure) {
             if (!existingLabelNames.includes(label.name)) {
-                await octokit.rest.issues.createLabel({
-                    owner,
-                    repo,
-                    name: label.name,
-                    color: label.color,
-                    description: label.description,
-                });
+                try {
+                    await octokit.rest.issues.createLabel({
+                        owner,
+                        repo: PHYSICAL_REPO,
+                        name: label.name,
+                        color: label.color,
+                        description: label.description,
+                    });
+                } catch (labelError) {
+                    console.warn(`Warning: Could not create label ${label.name}:`, labelError);
+                }
             }
         }
 
-        // 3. 이슈에 추가할 라벨 목록을 구성합니다.
-        const labelsToAdd = [repo]; // 기본적으로 레포 이름 라벨 추가
+        // 이슈에 추가할 라벨 목록 구성
+        const labelsToAdd = [projectLabel]; // 선택한 프로젝트 라벨 추가
         if (issueType === 'Task') {
-            labelsToAdd.push('Task', 'TODO'); // Task 타입이면 'Task'와 'TODO' 라벨 모두 추가
+            labelsToAdd.push('Task', 'TODO');
         } else if (issueType === 'Note') {
             labelsToAdd.push('Note');
         }
 
-        // 4. 최종적으로 라벨 목록과 함께 이슈를 생성합니다.
+        // 이슈 생성
         const { data: newIssue } = await octokit.rest.issues.create({
             owner,
-            repo,
+            repo: PHYSICAL_REPO,
             title,
             body,
             labels: labelsToAdd,
@@ -131,7 +215,9 @@ export async function POST(request: Request) {
             issue: newIssue,
             meta: {
                 authSource: auth.fromSession ? "session" : "header",
-                createdBy: owner
+                createdBy: owner,
+                physicalRepo: PHYSICAL_REPO,
+                projectLabel
             }
         }, { status: 201 });
     } catch (error) {

@@ -2,10 +2,13 @@ import { Octokit } from "@octokit/rest";
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-utils";
 
-// PATCH: 특정 이슈의 상태 및 라벨을 업데이트
+// 고정 레포지토리 이름 (물리적 저장소)
+const PHYSICAL_REPO = "barim-data";
+
+// PATCH: barim-data 레포의 특정 이슈 상태 및 라벨 업데이트
 export async function PATCH(
     request: Request,
-    { params }: { params: { issue_number: string } }
+    { params }: { params: Promise<{ issue_number: string }> }
 ) {
     const auth = await requireAuth(request);
     if (!auth) {
@@ -15,14 +18,16 @@ export async function PATCH(
     }
 
     const octokit = new Octokit({ auth: auth.token });
-    const issue_number = parseInt(params.issue_number, 10);
+    const { issue_number } = await params;
+    const issue_number_int = parseInt(issue_number, 10);
 
-    // body에서 업데이트할 정보들을 받음 (state, state_reason, labels, repo 등)
+    // body에서 업데이트할 정보들을 받음 (state, state_reason, labels 등)
     const updateData = await request.json();
-    const { repo, ...issueUpdateData } = updateData;
+    // repo 파라미터 추출 후 제거 (사용하지 않지만 API 호환성을 위해)
+    const { repo: _repo, ...issueUpdateData } = updateData;
 
-    // repo가 제공되지 않은 경우 기본값 사용
-    const repositoryName = repo || "barim-data";
+    // 항상 물리적 저장소 사용 (repo 파라미터 무시)
+    const repositoryName = PHYSICAL_REPO;
 
     try {
         const { data: user } = await octokit.rest.users.getAuthenticated();
@@ -31,7 +36,7 @@ export async function PATCH(
         const { data: updatedIssue } = await octokit.rest.issues.update({
             owner,
             repo: repositoryName,
-            issue_number,
+            issue_number: issue_number_int,
             ...issueUpdateData, // 받은 데이터를 그대로 전달하여 업데이트
         });
 

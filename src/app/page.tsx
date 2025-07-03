@@ -52,7 +52,7 @@ export default function HomePage() {
 
   // --- API 호출 함수들 ---
 
-  // 레포지토리 목록 불러오기
+  // 레포지토리 목록 불러오기 (프로젝트 선택용)
   const fetchRepos = async () => {
     try {
       const response = await fetch('/api/repos');
@@ -66,16 +66,16 @@ export default function HomePage() {
     }
   };
 
-  // 특정 레포지토리의 이슈 목록 불러오기
-  const fetchIssues = useCallback(async (repoName: string) => {
-    if (!repoName) return;
+  // 특정 프로젝트 라벨의 이슈들만 불러오기
+  const fetchIssues = useCallback(async (projectName: string) => {
+    if (!projectName) return;
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/issues?repo=${repoName}&page=${page}`);
+      const response = await fetch(`/api/issues?repo=${projectName}&page=${page}`);
       if (!response.ok) throw new Error('Failed to fetch issues.');
       const data = await response.json();
-      // API 응답 구조가 변경됨: { issues: [...], meta: {...} }
+      // API 응답 구조: { issues: [...], meta: {...} }
       setIssues(data.issues || data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -85,11 +85,15 @@ export default function HomePage() {
     }
   }, [page]);
 
-  // 새 항목(Task/Note) 생성
+  // 새 항목(Task/Note) 생성 (선택한 프로젝트 라벨 추가)
   const handleCreateIssue = async (e: FormEvent, issueType: 'Task' | 'Note') => {
     e.preventDefault();
     if (!newIssueTitle) {
       alert('제목을 입력해주세요.');
+      return;
+    }
+    if (!selectedRepo) {
+      alert('프로젝트를 선택해주세요.');
       return;
     }
     setIsLoading(true);
@@ -97,7 +101,12 @@ export default function HomePage() {
       const response = await fetch('/api/issues', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newIssueTitle, body: newIssueBody, repo: selectedRepo, issueType }),
+        body: JSON.stringify({ 
+          title: newIssueTitle, 
+          body: newIssueBody, 
+          repo: selectedRepo, // 프로젝트 라벨로 사용
+          issueType 
+        }),
       });
       if (!response.ok) throw new Error('Failed to create issue.');
 
@@ -122,7 +131,7 @@ export default function HomePage() {
 
     setIsLoading(true);
     let newLabels = issue.labels.map(l => l.name);
-    const updatePayload: UpdatePayload = { repo: selectedRepo }; // repo 정보 추가
+    const updatePayload: UpdatePayload = { repo: 'barim-data' };
 
     if (newState === 'DOING') {
       newLabels = newLabels.filter(name => name !== 'TODO');
@@ -161,7 +170,7 @@ export default function HomePage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          repo: selectedRepo,
+          repo: 'barim-data',
           state: 'closed',
           state_reason: reason 
         }),
@@ -190,14 +199,20 @@ export default function HomePage() {
       await fetch(`/api/issues/${pendingIssue.number}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ labels: newLabels }),
+        body: JSON.stringify({ 
+          repo: 'barim-data',
+          labels: newLabels 
+        }),
       });
 
       // 2. PENDING 이유를 댓글로 추가
       await fetch(`/api/issues/${pendingIssue.number}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: `**PENDING:** ${pendingReason}` }),
+        body: JSON.stringify({ 
+          body: `**PENDING:** ${pendingReason}`,
+          repo: 'barim-data'
+        }),
       });
 
       // 3. 모달 닫고 목록 새로고침
@@ -220,7 +235,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (selectedRepo) {
-      setPage(1); // 레포가 바뀌면 첫 페이지로
+      setPage(1); // 프로젝트가 바뀌면 첫 페이지로
       fetchIssues(selectedRepo);
     } else {
       setIssues([]);
@@ -230,7 +245,6 @@ export default function HomePage() {
   useEffect(() => {
     if (selectedRepo) fetchIssues(selectedRepo);
   }, [page, selectedRepo, fetchIssues]);
-
 
   // --- UI 렌더링 ---
   if (status === "loading") {
@@ -256,11 +270,35 @@ export default function HomePage() {
           <button onClick={() => signOut()} style={{ padding: '8px 15px', cursor: 'pointer' }}>로그아웃</button>
         </div>
 
-        <div>
-          <label htmlFor="repo-select">프로젝트(레포지토리) 선택: </label>
-          <select id="repo-select" value={selectedRepo} onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedRepo(e.target.value)}>
-            <option value="">-- 레포지토리를 선택하세요 --</option>
-            {allRepos.map(repo => <option key={repo.id} value={repo.name}>{repo.name}</option>)}
+        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f6f8fa', borderRadius: '8px', border: '1px solid #d1d9e0' }}>
+          <h3 style={{ margin: '0 0 10px 0', color: '#24292f' }}>📋 프로젝트별 작업 관리</h3>
+          <p style={{ margin: '0 0 10px 0', color: '#656d76', fontSize: '14px' }}>
+            • 모든 작업은 <strong>barim-data</strong> 레포지토리에 저장됩니다<br/>
+            • 아래에서 프로젝트를 선택하면 해당 프로젝트의 작업들만 필터링해서 보여줍니다<br/>
+            • 새로 생성하는 작업에는 선택한 프로젝트 라벨이 자동으로 추가됩니다
+          </p>
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label htmlFor="repo-select" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+            🎯 프로젝트 선택:
+          </label>
+          <select 
+            id="repo-select" 
+            value={selectedRepo} 
+            onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedRepo(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '10px', 
+              fontSize: '16px', 
+              borderRadius: '6px', 
+              border: '1px solid #d1d9e0' 
+            }}
+          >
+            <option value="">-- 프로젝트를 선택하세요 --</option>
+            {allRepos.map(repo => (
+              <option key={repo.id} value={repo.name}>{repo.name}</option>
+            ))}
           </select>
         </div>
 
@@ -268,19 +306,74 @@ export default function HomePage() {
             <>
               <hr style={{ margin: '20px 0' }}/>
               <div style={{ marginBottom: '30px' }}>
-                <h2>새 항목 만들기 (in &apos;{selectedRepo}&apos;)</h2>
+                <h2>새 항목 만들기</h2>
+                <p style={{ color: '#656d76', fontSize: '14px', margin: '0 0 15px 0' }}>
+                  <strong>{selectedRepo}</strong> 프로젝트에 새로운 작업이나 노트를 추가합니다
+                </p>
                 <form onSubmit={(e) => e.preventDefault()}>
-                  <input type="text" value={newIssueTitle} onChange={(e) => setNewIssueTitle(e.target.value)} placeholder="제목" style={{ width: '100%', padding: '8px', boxSizing: 'border-box', marginBottom: '10px' }}/>
-                  <textarea value={newIssueBody} onChange={(e) => setNewIssueBody(e.target.value)} placeholder="상세 내용 (선택 사항)" style={{ width: '100%', minHeight: '80px', padding: '8px', boxSizing: 'border-box', marginBottom: '10px' }}/>
+                  <input 
+                    type="text" 
+                    value={newIssueTitle} 
+                    onChange={(e) => setNewIssueTitle(e.target.value)} 
+                    placeholder="제목" 
+                    style={{ 
+                      width: '100%', 
+                      padding: '8px', 
+                      boxSizing: 'border-box', 
+                      marginBottom: '10px',
+                      borderRadius: '4px',
+                      border: '1px solid #d1d9e0'
+                    }}
+                  />
+                  <textarea 
+                    value={newIssueBody} 
+                    onChange={(e) => setNewIssueBody(e.target.value)} 
+                    placeholder="상세 내용 (선택 사항)" 
+                    style={{ 
+                      width: '100%', 
+                      minHeight: '80px', 
+                      padding: '8px', 
+                      boxSizing: 'border-box', 
+                      marginBottom: '10px',
+                      borderRadius: '4px',
+                      border: '1px solid #d1d9e0'
+                    }}
+                  />
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={(e) => handleCreateIssue(e, 'Task')} disabled={isLoading}>{isLoading ? '...' : 'Task로 생성'}</button>
-                    <button onClick={(e) => handleCreateIssue(e, 'Note')} disabled={isLoading}>{isLoading ? '...' : 'Note로 생성'}</button>
+                    <button 
+                      onClick={(e) => handleCreateIssue(e, 'Task')} 
+                      disabled={isLoading}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#0969da',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: isLoading ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {isLoading ? '...' : '📋 Task로 생성'}
+                    </button>
+                    <button 
+                      onClick={(e) => handleCreateIssue(e, 'Note')} 
+                      disabled={isLoading}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#bf8700',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: isLoading ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {isLoading ? '...' : '📝 Note로 생성'}
+                    </button>
                   </div>
                 </form>
               </div>
 
               <hr style={{ margin: '20px 0' }}/>
-              <h2>목록</h2>
+              <h2>{selectedRepo} 프로젝트의 작업 목록</h2>
               {isLoading && <p>로딩 중...</p>}
               {error && <p style={{ color: 'red' }}>에러: {error}</p>}
               <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -290,45 +383,121 @@ export default function HomePage() {
                   const isTask = labels.includes('Task');
                   const isTodo = labels.includes('TODO');
                   const isDoing = labels.includes('DOING');
-                  const isDone = labels.includes('DONE'); // ✨ 완료 상태 확인
+                  const isDone = labels.includes('DONE');
 
                   return (
-                      // ✨ 완료된 항목이면 취소선과 흐리게 처리
                       <li key={issue.id} style={{
-                        border: '1px solid #ddd',
+                        border: '1px solid #d1d9e0',
                         padding: '15px',
                         marginBottom: '10px',
-                        borderRadius: '5px',
-                        background: isDone ? '#f6f8fa' : '#fff', // 배경색 변경
-                        opacity: isDone ? 0.7 : 1, // 투명도 조절
+                        borderRadius: '8px',
+                        background: isDone ? '#f6f8fa' : '#fff',
+                        opacity: isDone ? 0.7 : 1,
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <a href={issue.html_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#0366d6' }}>
-                            {/* ✨ 완료된 항목이면 제목에 취소선 추가 */}
+                          <a href={issue.html_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#0969da' }}>
                             <strong style={{ fontSize: '1.2em', textDecoration: isDone ? 'line-through' : 'none' }}>
                               {issue.title}
                             </strong>
                           </a>
-                          {/* ✨ 완료된 항목이 아닐 때만 삭제 버튼 표시 */}
                           {!isDone && (
-                              <button onClick={() => handleCloseIssue(issue.number, 'not_planned')} disabled={isLoading} style={{ background: 'none', border: '1px solid #d9534f', color: '#d9534f', borderRadius: '5px', cursor: 'pointer', padding: '3px 8px' }}>
+                              <button 
+                                onClick={() => handleCloseIssue(issue.number, 'not_planned')} 
+                                disabled={isLoading} 
+                                style={{ 
+                                  background: 'none', 
+                                  border: '1px solid #da3633', 
+                                  color: '#da3633', 
+                                  borderRadius: '6px', 
+                                  cursor: 'pointer', 
+                                  padding: '4px 8px',
+                                  fontSize: '12px'
+                                }}
+                              >
                                 삭제
                               </button>
                           )}
                         </div>
                         <div style={{ marginTop: '10px' }}>
                           {issue.labels.map(label => (
-                              <span key={label.name} style={{ background: `#${label.color || 'eee'}`, color: '#fff', textShadow: '0 0 2px #000', padding: '2px 8px', marginRight: '5px', borderRadius: '10px', fontSize: '12px' }}>{label.name}</span>
+                              <span 
+                                key={label.name} 
+                                style={{ 
+                                  background: `#${label.color || 'eee'}`, 
+                                  color: '#fff', 
+                                  textShadow: '0 0 2px #000', 
+                                  padding: '2px 8px', 
+                                  marginRight: '5px', 
+                                  borderRadius: '12px', 
+                                  fontSize: '11px',
+                                  fontWeight: 'bold'
+                                }}
+                              >
+                                {label.name}
+                              </span>
                           ))}
                         </div>
-                        <p style={{ marginTop: '10px', color: '#586069' }}>{issue.body || '상세 내용 없음'}</p>
+                        <p style={{ marginTop: '10px', color: '#656d76' }}>
+                          {issue.body || '상세 내용 없음'}
+                        </p>
 
-                        {/* ✨ 완료되지 않은 Task일 때만 상태 변경 버튼 표시 */}
                         {isTask && !isDone && (
-                            <div style={{ marginTop: '15px', paddingTop: '10px', borderTop: '1px solid #eee', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                              {isTodo && <button onClick={() => handleUpdateState(issue, 'DOING')}>▶️ DOING</button>}
-                              {isDoing && <button onClick={() => handleUpdateState(issue, 'DONE')}>✅ DONE</button>}
-                              {isDoing && <button onClick={() => handleUpdateState(issue, 'PENDING')}>⏸️ PENDING</button>}
+                            <div style={{ 
+                              marginTop: '15px', 
+                              paddingTop: '10px', 
+                              borderTop: '1px solid #eee', 
+                              display: 'flex', 
+                              gap: '8px', 
+                              flexWrap: 'wrap' 
+                            }}>
+                              {isTodo && (
+                                <button 
+                                  onClick={() => handleUpdateState(issue, 'DOING')}
+                                  style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: '#1f883d',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px'
+                                  }}
+                                >
+                                  ▶️ DOING
+                                </button>
+                              )}
+                              {isDoing && (
+                                <>
+                                  <button 
+                                    onClick={() => handleUpdateState(issue, 'DONE')}
+                                    style={{
+                                      padding: '6px 12px',
+                                      backgroundColor: '#1f883d',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      fontSize: '12px'
+                                    }}
+                                  >
+                                    ✅ DONE
+                                  </button>
+                                  <button 
+                                    onClick={() => handleUpdateState(issue, 'PENDING')}
+                                    style={{
+                                      padding: '6px 12px',
+                                      backgroundColor: '#d1242f',
+                                      color: 'white',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      fontSize: '12px'
+                                    }}
+                                  >
+                                    ⏸️ PENDING
+                                  </button>
+                                </>
+                              )}
                             </div>
                         )}
                       </li>
@@ -336,23 +505,115 @@ export default function HomePage() {
                 })}
               </ul>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1 || isLoading}>이전 페이지</button>
-                <span>Page {page}</span>
-                <button onClick={() => setPage(p => p + 1)} disabled={issues.length < 10 || isLoading}>다음 페이지</button>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginTop: '20px' 
+              }}>
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))} 
+                  disabled={page === 1 || isLoading}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: page === 1 ? '#f6f8fa' : '#f3f4f6',
+                    border: '1px solid #d1d9e0',
+                    borderRadius: '6px',
+                    cursor: page === 1 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  이전 페이지
+                </button>
+                <span style={{ fontWeight: 'bold' }}>Page {page}</span>
+                <button 
+                  onClick={() => setPage(p => p + 1)} 
+                  disabled={issues.length < 10 || isLoading}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: issues.length < 10 ? '#f6f8fa' : '#f3f4f6',
+                    border: '1px solid #d1d9e0',
+                    borderRadius: '6px',
+                    cursor: issues.length < 10 ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  다음 페이지
+                </button>
               </div>
             </>
         )}
 
         {isPendingModalOpen && pendingIssue && (
-            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ background: 'white', padding: '20px', borderRadius: '5px', width: '400px' }}>
-                <h3>&apos;{pendingIssue.title}&apos; 보류 사유</h3>
+            <div style={{ 
+              position: 'fixed', 
+              top: 0, 
+              left: 0, 
+              width: '100%', 
+              height: '100%', 
+              background: 'rgba(0,0,0,0.5)', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{ 
+                background: 'white', 
+                padding: '24px', 
+                borderRadius: '8px', 
+                width: '400px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+              }}>
+                <h3 style={{ margin: '0 0 16px 0' }}>
+                  &apos;{pendingIssue.title}&apos; 보류 사유
+                </h3>
                 <form onSubmit={handleConfirmPending}>
-                  <textarea value={pendingReason} onChange={(e) => setPendingReason(e.target.value)} placeholder="보류하는 이유를 입력하세요..." style={{ width: '100%', minHeight: '100px', boxSizing: 'border-box' }} required />
-                  <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                    <button type="button" onClick={() => setIsPendingModalOpen(false)}>취소</button>
-                    <button type="submit" disabled={isLoading}>{isLoading ? '...' : '확인'}</button>
+                  <textarea 
+                    value={pendingReason} 
+                    onChange={(e) => setPendingReason(e.target.value)} 
+                    placeholder="보류하는 이유를 입력하세요..." 
+                    style={{ 
+                      width: '100%', 
+                      minHeight: '100px', 
+                      boxSizing: 'border-box',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d9e0',
+                      resize: 'vertical'
+                    }} 
+                    required 
+                  />
+                  <div style={{ 
+                    marginTop: '16px', 
+                    display: 'flex', 
+                    justifyContent: 'flex-end', 
+                    gap: '8px' 
+                  }}>
+                    <button 
+                      type="button" 
+                      onClick={() => setIsPendingModalOpen(false)}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#f6f8fa',
+                        border: '1px solid #d1d9e0',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      취소
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={isLoading}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#d1242f',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: isLoading ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {isLoading ? '...' : '확인'}
+                    </button>
                   </div>
                 </form>
               </div>

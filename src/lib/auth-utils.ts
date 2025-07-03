@@ -18,7 +18,9 @@ export async function getAccessToken(request?: Request): Promise<string | null> 
             return session.accessToken;
         }
     } catch {
-        console.log("Session not available, checking Authorization header");
+        if (process.env.NODE_ENV === 'development') {
+            console.log("Session not available, checking Authorization header");
+        }
     }
 
     // 2. Authorization 헤더에서 토큰 확인
