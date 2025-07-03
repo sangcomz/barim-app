@@ -31,8 +31,395 @@ interface UpdatePayload {
   state_reason?: string;
 }
 
+// 다크모드 토글 컴포넌트
+function ThemeToggle() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // 초기 테마 확인
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+    
+    setIsDark(shouldBeDark);
+    document.documentElement.setAttribute('data-theme', shouldBeDark ? 'dark' : 'light');
+  }, []);
+
+  const toggleTheme = () => {
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
+    document.documentElement.setAttribute('data-theme', newIsDark ? 'dark' : 'light');
+    localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
+  };
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="btn btn-secondary p-2"
+      title={isDark ? "라이트 모드로 변경" : "다크 모드로 변경"}
+    >
+      {isDark ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+// 로그인 전 랜딩 페이지 컴포넌트
+function LandingPage() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div className="min-h-screen" style={{ 
+      background: 'var(--background)',
+      backgroundImage: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)'
+    }}>
+      {/* Fixed Theme Toggle - only visible when NOT scrolled */}
+      <div className={`fixed top-6 right-6 z-50 transition-all duration-300 ${
+        isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}>
+        <ThemeToggle />
+      </div>
+
+      {/* Floating Header - visible when scrolled, includes theme toggle */}
+      <header 
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+          isScrolled ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+        }`}
+        style={{ 
+          background: `rgba(var(--card-rgb), 0.9)`,
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid var(--border)'
+        }}
+      >
+        <div className="container mx-auto">
+          <div className="flex justify-between items-center py-4">
+            <h1 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>Barim</h1>
+            <ThemeToggle />
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <div className="min-h-screen flex flex-col justify-center items-center px-6 py-20">
+        <div className="text-center mb-16 fade-in max-w-4xl">
+          <h1 className="text-6xl md:text-7xl font-bold" style={{ color: 'var(--foreground)' }}>
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Barim
+            </span>
+          </h1>
+          <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed" style={{ color: 'var(--secondary)' }}>
+            GitHub Issues를 활용한 스마트한 프로젝트 관리 도구
+          </p>
+          <button 
+            onClick={() => signIn('github')} 
+            className="btn btn-primary text-lg px-8 py-4 shadow-lg hover:shadow-xl mx-auto"
+          >
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd" />
+            </svg>
+            GitHub으로 시작하기
+          </button>
+        </div>
+
+        {/* Feature Cards */}
+        <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto mb-8 w-full">
+          <div className="card card-hover text-center p-8">
+            <div className="flex justify-center mb-8">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{
+                background: 'var(--primary)',
+                boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)'
+              }}>
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17H7a2 2 0 01-2-2V7a2 2 0 012-2h2m0 10h8a2 2 0 002-2V7a2 2 0 00-2-2h-8m0 10v4a2 2 0 002 2h6a2 2 0 002-2v-4M9 7v10" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-2xl font-semibold mb-6">칸반 보드</h3>
+            <p className="text-lg leading-relaxed" style={{ color: 'var(--secondary)' }}>
+              TODO, DOING, DONE, PENDING 상태로 작업을 시각적으로 관리하고 
+              원클릭으로 쉽게 상태를 변경할 수 있습니다.
+            </p>
+          </div>
+
+          <div className="card card-hover text-center p-8">
+            <div className="flex justify-center mb-8">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{
+                background: 'var(--warning)',
+                boxShadow: '0 8px 32px rgba(191, 135, 0, 0.3)'
+              }}>
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-2xl font-semibold mb-6">노트 기능</h3>
+            <p className="text-lg leading-relaxed" style={{ color: 'var(--secondary)' }}>
+              프로젝트별로 노트를 정리하고 아이디어를 기록하여 
+              체계적인 지식 관리가 가능합니다.
+            </p>
+          </div>
+        </div>
+
+        {/* Additional Features */}
+        <div className="card shadow-xl p-12 max-w-6xl mx-auto w-full mb-8">
+          <h2 className="text-4xl font-bold text-center mb-12">왜 Barim인가요?</h2>
+          <div className="grid md:grid-cols-3 gap-12">
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{
+                  background: 'var(--success)',
+                  boxShadow: '0 8px 32px rgba(26, 127, 55, 0.2)'
+                }}>
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+              </div>
+              <h4 className="text-xl font-semibold mb-4">빠른 동기화</h4>
+              <p className="text-lg leading-relaxed" style={{ color: 'var(--secondary)' }}>GitHub Issues와 실시간 동기화로 언제 어디서든 최신 상태 유지</p>
+            </div>
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{
+                  background: 'var(--primary)',
+                  boxShadow: '0 8px 32px rgba(9, 105, 218, 0.2)'
+                }}>
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+              </div>
+              <h4 className="text-xl font-semibold mb-4">안전한 관리</h4>
+              <p className="text-lg leading-relaxed" style={{ color: 'var(--secondary)' }}>GitHub OAuth 인증으로 안전하고 신뢰할 수 있는 데이터 보호</p>
+            </div>
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{
+                  background: 'linear-gradient(135deg, var(--primary), var(--warning))',
+                  boxShadow: '0 8px 32px rgba(139, 92, 246, 0.2)'
+                }}>
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+              </div>
+              <h4 className="text-xl font-semibold mb-4">IDE 플러그인 연동</h4>
+              <p className="text-lg leading-relaxed" style={{ color: 'var(--secondary)' }}>IntelliJ, VSCode 등 주요 IDE 플러그인과 연동하여 개발 환경에서 바로 작업 관리</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="mt-48" style={{ 
+        background: 'var(--card)'
+      }}>
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Left: Logo & Copyright */}
+            <div className="flex items-center gap-4">
+              <h3 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Barim
+                </span>
+              </h3>
+              <span className="text-sm" style={{ color: 'var(--secondary)' }}>
+                © 2025
+              </span>
+            </div>
+
+            {/* Right: Links */}
+            <div className="flex items-center gap-6">
+              <a 
+                href="https://github.com/sangcomz/barim-app" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                style={{ color: 'var(--secondary)' }}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd" />
+                </svg>
+                GitHub
+              </a>
+              <a 
+                href="https://github.com/sangcomz/barim-app/issues" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                style={{ color: 'var(--secondary)' }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                Report Issue
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+// 칸반 카드 컴포넌트
+function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
+  issue: Issue;
+  onUpdateState: (issue: Issue, newState: 'DOING' | 'DONE' | 'PENDING') => void;
+  onDelete: (issueNumber: number) => void;
+  isLoading: boolean;
+}) {
+  const labels = issue.labels.map(l => l.name);
+  const isTask = labels.includes('Task');
+  const isTodo = labels.includes('TODO');
+  const isDoing = labels.includes('DOING');
+  const isDone = labels.includes('DONE');
+  const isPending = labels.includes('PENDING');
+
+  return (
+    <div className={`card mb-4 ${isDone ? 'opacity-60' : ''} ${isTask ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-purple-500'}`}>
+      <div className="flex justify-between items-start mb-3">
+        <a 
+          href={issue.html_url} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className={`font-medium hover:text-blue-600 ${isDone ? 'line-through' : ''}`}
+          style={{ color: 'var(--foreground)' }}
+        >
+          {issue.title}
+        </a>
+        {!isDone && (
+          <button 
+            onClick={() => onDelete(issue.number)}
+            disabled={isLoading}
+            className="hover:text-red-500 p-1"
+            style={{ color: 'var(--secondary)' }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-1 mb-3">
+        {issue.labels.map(label => (
+          <span 
+            key={label.name}
+            className="text-xs px-2 py-1 rounded-full text-white font-medium"
+            style={{ backgroundColor: `#${label.color || 'gray'}` }}
+          >
+            {label.name}
+          </span>
+        ))}
+      </div>
+
+      {issue.body && (
+        <p className="text-sm mb-3 line-clamp-3" style={{ color: 'var(--secondary)' }}>
+          {issue.body}
+        </p>
+      )}
+
+      {isTask && !isDone && (
+        <div className="flex gap-2">
+          {isTodo && (
+            <button 
+              onClick={() => onUpdateState(issue, 'DOING')}
+              className="btn btn-success text-xs px-3 py-1"
+              disabled={isLoading}
+            >
+              시작하기
+            </button>
+          )}
+          {isDoing && (
+            <>
+              <button 
+                onClick={() => onUpdateState(issue, 'DONE')}
+                className="btn btn-success text-xs px-3 py-1"
+                disabled={isLoading}
+              >
+                완료
+              </button>
+              <button 
+                onClick={() => onUpdateState(issue, 'PENDING')}
+                className="btn btn-warning text-xs px-3 py-1"
+                disabled={isLoading}
+              >
+                보류
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 노트 리스트 컴포넌트
+function NotesList({ issues }: { issues: Issue[] }) {
+  const notes = issues.filter(issue => issue.labels.some(label => label.name === 'Note'));
+
+  return (
+    <div className="h-full">
+      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        노트 ({notes.length})
+      </h3>
+      <div className="space-y-3 max-h-96 overflow-y-auto">
+        {notes.map(note => (
+          <div key={note.id} className="card border-purple-200 rounded-lg p-3" style={{ 
+            backgroundColor: 'var(--card)',
+            borderColor: '#e9d5ff'
+          }}>
+            <a 
+              href={note.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium hover:text-purple-700 block mb-2"
+              style={{ color: 'var(--foreground)' }}
+            >
+              {note.title}
+            </a>
+            {note.body && (
+              <p className="text-sm line-clamp-2" style={{ color: 'var(--secondary)' }}>
+                {note.body}
+              </p>
+            )}
+          </div>
+        ))}
+        {notes.length === 0 && (
+          <div className="text-center py-8" style={{ color: 'var(--secondary)' }}>
+            <svg className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--border)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <p>등록된 노트가 없습니다</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 메인 컴포넌트
 export default function HomePage() {
-  // 세션 및 상태 관리
   const { data: session, status } = useSession();
   const [allRepos, setAllRepos] = useState<Repo[]>([]);
   const [selectedRepo, setSelectedRepo] = useState<string>('');
@@ -40,33 +427,37 @@ export default function HomePage() {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // 새 항목 생성 폼 상태
   const [newIssueTitle, setNewIssueTitle] = useState('');
   const [newIssueBody, setNewIssueBody] = useState('');
-
-  // PENDING 모달 상태
   const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
   const [pendingIssue, setPendingIssue] = useState<Issue | null>(null);
   const [pendingReason, setPendingReason] = useState('');
 
-  // --- API 호출 함수들 ---
-
-  // 레포지토리 목록 불러오기 (프로젝트 선택용)
+  // API 호출 함수들
   const fetchRepos = async () => {
     try {
       const response = await fetch('/api/repos');
       if (!response.ok) throw new Error('Failed to fetch repositories.');
       const data = await response.json();
-      // API 응답 구조가 변경됨: { repos: [...], meta: {...} }
-      setAllRepos(data.repos || data);
+      const repos = data.repos || data;
+      setAllRepos(repos);
+      
+      // 마지막 선택된 레포를 로컬스토리지에서 확인
+      const lastRepo = localStorage.getItem('lastSelectedRepo');
+      
+      if (lastRepo && repos.some((repo: Repo) => repo.name === lastRepo)) {
+        // 로컬스토리지에 저장된 레포가 있으면 사용
+        setSelectedRepo(lastRepo);
+      } else if (repos.length > 0) {
+        // 없으면 가장 최근 업데이트된 레포를 자동 선택 (이미 정렬되어 있음)
+        setSelectedRepo(repos[0].name);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
     }
   };
 
-  // 특정 프로젝트 라벨의 이슈들만 불러오기
   const fetchIssues = useCallback(async (projectName: string) => {
     if (!projectName) return;
     setIsLoading(true);
@@ -75,8 +466,10 @@ export default function HomePage() {
       const response = await fetch(`/api/issues?repo=${projectName}&page=${page}`);
       if (!response.ok) throw new Error('Failed to fetch issues.');
       const data = await response.json();
-      // API 응답 구조: { issues: [...], meta: {...} }
       setIssues(data.issues || data);
+      
+      // 선택된 레포를 로컬스토리지에 저장
+      localStorage.setItem('lastSelectedRepo', projectName);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
@@ -85,7 +478,6 @@ export default function HomePage() {
     }
   }, [page]);
 
-  // 새 항목(Task/Note) 생성 (선택한 프로젝트 라벨 추가)
   const handleCreateIssue = async (e: FormEvent, issueType: 'Task' | 'Note') => {
     e.preventDefault();
     if (!newIssueTitle) {
@@ -104,7 +496,7 @@ export default function HomePage() {
         body: JSON.stringify({ 
           title: newIssueTitle, 
           body: newIssueBody, 
-          repo: selectedRepo, // 프로젝트 라벨로 사용
+          repo: selectedRepo,
           issueType 
         }),
       });
@@ -121,7 +513,6 @@ export default function HomePage() {
     }
   };
 
-  // Task 상태 변경 (TODO -> DOING, DOING -> DONE/PENDING)
   const handleUpdateState = async (issue: Issue, newState: 'DOING' | 'DONE' | 'PENDING') => {
     if (newState === 'PENDING') {
       setPendingIssue(issue);
@@ -162,8 +553,7 @@ export default function HomePage() {
     }
   };
 
-  // 이슈 닫기 (삭제)
-  const handleCloseIssue = async (issueNumber: number, reason: string) => {
+  const handleCloseIssue = async (issueNumber: number) => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/issues/${issueNumber}`, {
@@ -172,7 +562,7 @@ export default function HomePage() {
         body: JSON.stringify({ 
           repo: 'barim-data',
           state: 'closed',
-          state_reason: reason 
+          state_reason: 'not_planned' 
         }),
       });
       if (!response.ok) throw new Error('Failed to close issue.');
@@ -186,14 +576,12 @@ export default function HomePage() {
     }
   };
 
-  // PENDING 상태 확정 (라벨 변경 및 댓글 추가)
   const handleConfirmPending = async (e: FormEvent) => {
     e.preventDefault();
     if (!pendingIssue || !pendingReason) return;
 
     setIsLoading(true);
     try {
-      // 1. PENDING 라벨 추가
       const newLabels = pendingIssue.labels.map(l => l.name).filter(name => name !== 'DOING' && name !== 'TODO');
       newLabels.push('PENDING');
       await fetch(`/api/issues/${pendingIssue.number}`, {
@@ -205,7 +593,6 @@ export default function HomePage() {
         }),
       });
 
-      // 2. PENDING 이유를 댓글로 추가
       await fetch(`/api/issues/${pendingIssue.number}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -215,7 +602,6 @@ export default function HomePage() {
         }),
       });
 
-      // 3. 모달 닫고 목록 새로고침
       setIsPendingModalOpen(false);
       setPendingReason('');
       setPendingIssue(null);
@@ -228,14 +614,13 @@ export default function HomePage() {
     }
   };
 
-  // --- useEffect 훅들 ---
   useEffect(() => {
     if (status === 'authenticated') fetchRepos();
   }, [status]);
 
   useEffect(() => {
     if (selectedRepo) {
-      setPage(1); // 프로젝트가 바뀌면 첫 페이지로
+      setPage(1);
       fetchIssues(selectedRepo);
     } else {
       setIssues([]);
@@ -246,379 +631,245 @@ export default function HomePage() {
     if (selectedRepo) fetchIssues(selectedRepo);
   }, [page, selectedRepo, fetchIssues]);
 
-  // --- UI 렌더링 ---
   if (status === "loading") {
-    return <main style={{ padding: '50px', textAlign: 'center' }}>Loading...</main>;
-  }
-
-  if (!session) {
     return (
-        <main style={{ padding: '50px', textAlign: 'center', fontFamily: 'sans-serif' }}>
-          <h1>Barim에 오신 것을 환영합니다</h1>
-          <p>GitHub 계정으로 로그인하여 할 일 목록을 관리해보세요.</p>
-          <button onClick={() => signIn('github')} style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer' }}>
-            GitHub으로 로그인
-          </button>
-        </main>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="spinner"></div>
+      </div>
     );
   }
 
+  if (!session) {
+    return <LandingPage />;
+  }
+
+  // 칸반 보드용 이슈들 분류
+  const tasks = issues.filter(issue => issue.labels.some(label => label.name === 'Task'));
+  const todoTasks = tasks.filter(issue => issue.labels.some(label => label.name === 'TODO'));
+  const doingTasks = tasks.filter(issue => issue.labels.some(label => label.name === 'DOING'));
+  const doneTasks = tasks.filter(issue => issue.labels.some(label => label.name === 'DONE'));
+  const pendingTasks = tasks.filter(issue => issue.labels.some(label => label.name === 'PENDING'));
+
   return (
-      <main style={{ fontFamily: 'sans-serif', maxWidth: '800px', margin: 'auto', padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h1>{session.user?.name}님의 Barim</h1>
-          <button onClick={() => signOut()} style={{ padding: '8px 15px', cursor: 'pointer' }}>로그아웃</button>
+    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+      {/* Header */}
+      <header className="sticky top-0 z-40 mb-8" style={{
+        background: 'var(--card)', 
+        borderBottom: '1px solid var(--border)'
+      }}>
+        <div className="container mx-auto">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>Barim</h1>
+              <div className="text-sm" style={{ color: 'var(--secondary)' }}>
+                {session.user?.name}님, 안녕하세요!
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <button onClick={() => signOut()} className="btn btn-secondary">
+                로그아웃
+              </button>
+            </div>
+          </div>
         </div>
+      </header>
 
-        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f6f8fa', borderRadius: '8px', border: '1px solid #d1d9e0' }}>
-          <h3 style={{ margin: '0 0 10px 0', color: '#24292f' }}>📋 프로젝트별 작업 관리</h3>
-          <p style={{ margin: '0 0 10px 0', color: '#656d76', fontSize: '14px' }}>
-            • 모든 작업은 <strong>barim-data</strong> 레포지토리에 저장됩니다<br/>
-            • 아래에서 프로젝트를 선택하면 해당 프로젝트의 작업들만 필터링해서 보여줍니다<br/>
-            • 새로 생성하는 작업에는 선택한 프로젝트 라벨이 자동으로 추가됩니다
-          </p>
-        </div>
-
-        <div style={{ marginBottom: '20px' }}>
-          <label htmlFor="repo-select" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            🎯 프로젝트 선택:
-          </label>
-          <select 
-            id="repo-select" 
-            value={selectedRepo} 
-            onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedRepo(e.target.value)}
-            style={{ 
-              width: '100%', 
-              padding: '10px', 
-              fontSize: '16px', 
-              borderRadius: '6px', 
-              border: '1px solid #d1d9e0' 
-            }}
-          >
-            <option value="">-- 프로젝트를 선택하세요 --</option>
-            {allRepos.map(repo => (
-              <option key={repo.id} value={repo.name}>{repo.name}</option>
-            ))}
-          </select>
+      <div className="container mx-auto py-6">
+        {/* Project Selector */}
+        <div className="card mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 max-w-md">
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                프로젝트 선택
+              </label>
+              <select 
+                value={selectedRepo} 
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedRepo(e.target.value)}
+                className="select"
+              >
+                <option value="">-- 프로젝트를 선택하세요 --</option>
+                {allRepos.map(repo => (
+                  <option key={repo.id} value={repo.name}>{repo.name}</option>
+                ))}
+              </select>
+            </div>
+            {selectedRepo && (
+              <div className="text-sm" style={{ color: 'var(--secondary)' }}>
+                {tasks.length}개 작업, {issues.filter(i => i.labels.some(l => l.name === 'Note')).length}개 노트
+              </div>
+            )}
+          </div>
         </div>
 
         {selectedRepo && (
-            <>
-              <hr style={{ margin: '20px 0' }}/>
-              <div style={{ marginBottom: '30px' }}>
-                <h2>새 항목 만들기</h2>
-                <p style={{ color: '#656d76', fontSize: '14px', margin: '0 0 15px 0' }}>
-                  <strong>{selectedRepo}</strong> 프로젝트에 새로운 작업이나 노트를 추가합니다
-                </p>
-                <form onSubmit={(e) => e.preventDefault()}>
-                  <input 
-                    type="text" 
-                    value={newIssueTitle} 
-                    onChange={(e) => setNewIssueTitle(e.target.value)} 
-                    placeholder="제목" 
-                    style={{ 
-                      width: '100%', 
-                      padding: '8px', 
-                      boxSizing: 'border-box', 
-                      marginBottom: '10px',
-                      borderRadius: '4px',
-                      border: '1px solid #d1d9e0'
-                    }}
-                  />
-                  <textarea 
-                    value={newIssueBody} 
-                    onChange={(e) => setNewIssueBody(e.target.value)} 
-                    placeholder="상세 내용 (선택 사항)" 
-                    style={{ 
-                      width: '100%', 
-                      minHeight: '80px', 
-                      padding: '8px', 
-                      boxSizing: 'border-box', 
-                      marginBottom: '10px',
-                      borderRadius: '4px',
-                      border: '1px solid #d1d9e0'
-                    }}
-                  />
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button 
-                      onClick={(e) => handleCreateIssue(e, 'Task')} 
-                      disabled={isLoading}
-                      style={{
-                        padding: '8px 16px',
-                        backgroundColor: '#0969da',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: isLoading ? 'not-allowed' : 'pointer'
-                      }}
-                    >
-                      {isLoading ? '...' : '📋 Task로 생성'}
-                    </button>
-                    <button 
-                      onClick={(e) => handleCreateIssue(e, 'Note')} 
-                      disabled={isLoading}
-                      style={{
-                        padding: '8px 16px',
-                        backgroundColor: '#bf8700',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: isLoading ? 'not-allowed' : 'pointer'
-                      }}
-                    >
-                      {isLoading ? '...' : '📝 Note로 생성'}
-                    </button>
+          <>
+            {/* Create New Item */}
+            <div className="card mb-6">
+              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--foreground)' }}>새 항목 생성</h2>
+              <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                <input 
+                  type="text" 
+                  value={newIssueTitle} 
+                  onChange={(e) => setNewIssueTitle(e.target.value)} 
+                  placeholder="제목을 입력하세요" 
+                  className="input"
+                />
+                <textarea 
+                  value={newIssueBody} 
+                  onChange={(e) => setNewIssueBody(e.target.value)} 
+                  placeholder="상세 내용 (선택사항)" 
+                  className="textarea"
+                />
+                <div className="flex gap-3">
+                  <button 
+                    onClick={(e) => handleCreateIssue(e, 'Task')} 
+                    disabled={isLoading}
+                    className="btn btn-primary"
+                  >
+                    {isLoading ? <div className="spinner"></div> : '📋 Task 생성'}
+                  </button>
+                  <button 
+                    onClick={(e) => handleCreateIssue(e, 'Note')} 
+                    disabled={isLoading}
+                    className="btn btn-warning"
+                  >
+                    {isLoading ? <div className="spinner"></div> : '📝 Note 생성'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {error && (
+              <div className="rounded-lg p-4 mb-6" style={{ 
+                backgroundColor: '#fef2f2', 
+                border: '1px solid #fecaca' 
+              }}>
+                <p style={{ color: '#b91c1c' }}>에러: {error}</p>
+              </div>
+            )}
+
+            {/* Main Content Area */}
+            <div className="grid grid-cols-4 gap-6">
+              {/* Kanban Board - 3/4 */}
+              <div className="col-span-3">
+                <div className="grid grid-cols-4 gap-4">
+                  {/* TODO Column */}
+                  <div className="card p-4">
+                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                      <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                      TODO ({todoTasks.length})
+                    </h3>
+                    {todoTasks.map(task => (
+                      <KanbanCard 
+                        key={task.id} 
+                        issue={task} 
+                        onUpdateState={handleUpdateState}
+                        onDelete={handleCloseIssue}
+                        isLoading={isLoading}
+                      />
+                    ))}
                   </div>
-                </form>
+
+                  {/* DOING Column */}
+                  <div className="card p-4">
+                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      DOING ({doingTasks.length})
+                    </h3>
+                    {doingTasks.map(task => (
+                      <KanbanCard 
+                        key={task.id} 
+                        issue={task} 
+                        onUpdateState={handleUpdateState}
+                        onDelete={handleCloseIssue}
+                        isLoading={isLoading}
+                      />
+                    ))}
+                  </div>
+
+                  {/* DONE Column */}
+                  <div className="card p-4">
+                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      DONE ({doneTasks.length})
+                    </h3>
+                    {doneTasks.map(task => (
+                      <KanbanCard 
+                        key={task.id} 
+                        issue={task} 
+                        onUpdateState={handleUpdateState}
+                        onDelete={handleCloseIssue}
+                        isLoading={isLoading}
+                      />
+                    ))}
+                  </div>
+
+                  {/* PENDING Column */}
+                  <div className="card p-4">
+                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      PENDING ({pendingTasks.length})
+                    </h3>
+                    {pendingTasks.map(task => (
+                      <KanbanCard 
+                        key={task.id} 
+                        issue={task} 
+                        onUpdateState={handleUpdateState}
+                        onDelete={handleCloseIssue}
+                        isLoading={isLoading}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              <hr style={{ margin: '20px 0' }}/>
-              <h2>{selectedRepo} 프로젝트의 작업 목록</h2>
-              {isLoading && <p>로딩 중...</p>}
-              {error && <p style={{ color: 'red' }}>에러: {error}</p>}
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                {issues.map((issue) => {
-                  // 라벨 이름만으로 상태를 확인
-                  const labels = issue.labels.map(l => l.name);
-                  const isTask = labels.includes('Task');
-                  const isTodo = labels.includes('TODO');
-                  const isDoing = labels.includes('DOING');
-                  const isDone = labels.includes('DONE');
-
-                  return (
-                      <li key={issue.id} style={{
-                        border: '1px solid #d1d9e0',
-                        padding: '15px',
-                        marginBottom: '10px',
-                        borderRadius: '8px',
-                        background: isDone ? '#f6f8fa' : '#fff',
-                        opacity: isDone ? 0.7 : 1,
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <a href={issue.html_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#0969da' }}>
-                            <strong style={{ fontSize: '1.2em', textDecoration: isDone ? 'line-through' : 'none' }}>
-                              {issue.title}
-                            </strong>
-                          </a>
-                          {!isDone && (
-                              <button 
-                                onClick={() => handleCloseIssue(issue.number, 'not_planned')} 
-                                disabled={isLoading} 
-                                style={{ 
-                                  background: 'none', 
-                                  border: '1px solid #da3633', 
-                                  color: '#da3633', 
-                                  borderRadius: '6px', 
-                                  cursor: 'pointer', 
-                                  padding: '4px 8px',
-                                  fontSize: '12px'
-                                }}
-                              >
-                                삭제
-                              </button>
-                          )}
-                        </div>
-                        <div style={{ marginTop: '10px' }}>
-                          {issue.labels.map(label => (
-                              <span 
-                                key={label.name} 
-                                style={{ 
-                                  background: `#${label.color || 'eee'}`, 
-                                  color: '#fff', 
-                                  textShadow: '0 0 2px #000', 
-                                  padding: '2px 8px', 
-                                  marginRight: '5px', 
-                                  borderRadius: '12px', 
-                                  fontSize: '11px',
-                                  fontWeight: 'bold'
-                                }}
-                              >
-                                {label.name}
-                              </span>
-                          ))}
-                        </div>
-                        <p style={{ marginTop: '10px', color: '#656d76' }}>
-                          {issue.body || '상세 내용 없음'}
-                        </p>
-
-                        {isTask && !isDone && (
-                            <div style={{ 
-                              marginTop: '15px', 
-                              paddingTop: '10px', 
-                              borderTop: '1px solid #eee', 
-                              display: 'flex', 
-                              gap: '8px', 
-                              flexWrap: 'wrap' 
-                            }}>
-                              {isTodo && (
-                                <button 
-                                  onClick={() => handleUpdateState(issue, 'DOING')}
-                                  style={{
-                                    padding: '6px 12px',
-                                    backgroundColor: '#1f883d',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    fontSize: '12px'
-                                  }}
-                                >
-                                  ▶️ DOING
-                                </button>
-                              )}
-                              {isDoing && (
-                                <>
-                                  <button 
-                                    onClick={() => handleUpdateState(issue, 'DONE')}
-                                    style={{
-                                      padding: '6px 12px',
-                                      backgroundColor: '#1f883d',
-                                      color: 'white',
-                                      border: 'none',
-                                      borderRadius: '6px',
-                                      cursor: 'pointer',
-                                      fontSize: '12px'
-                                    }}
-                                  >
-                                    ✅ DONE
-                                  </button>
-                                  <button 
-                                    onClick={() => handleUpdateState(issue, 'PENDING')}
-                                    style={{
-                                      padding: '6px 12px',
-                                      backgroundColor: '#d1242f',
-                                      color: 'white',
-                                      border: 'none',
-                                      borderRadius: '6px',
-                                      cursor: 'pointer',
-                                      fontSize: '12px'
-                                    }}
-                                  >
-                                    ⏸️ PENDING
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                        )}
-                      </li>
-                  );
-                })}
-              </ul>
-
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginTop: '20px' 
-              }}>
-                <button 
-                  onClick={() => setPage(p => Math.max(1, p - 1))} 
-                  disabled={page === 1 || isLoading}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: page === 1 ? '#f6f8fa' : '#f3f4f6',
-                    border: '1px solid #d1d9e0',
-                    borderRadius: '6px',
-                    cursor: page === 1 ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  이전 페이지
-                </button>
-                <span style={{ fontWeight: 'bold' }}>Page {page}</span>
-                <button 
-                  onClick={() => setPage(p => p + 1)} 
-                  disabled={issues.length < 10 || isLoading}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: issues.length < 10 ? '#f6f8fa' : '#f3f4f6',
-                    border: '1px solid #d1d9e0',
-                    borderRadius: '6px',
-                    cursor: issues.length < 10 ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  다음 페이지
-                </button>
-              </div>
-            </>
-        )}
-
-        {isPendingModalOpen && pendingIssue && (
-            <div style={{ 
-              position: 'fixed', 
-              top: 0, 
-              left: 0, 
-              width: '100%', 
-              height: '100%', 
-              background: 'rgba(0,0,0,0.5)', 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center',
-              zIndex: 1000
-            }}>
-              <div style={{ 
-                background: 'white', 
-                padding: '24px', 
-                borderRadius: '8px', 
-                width: '400px',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
-              }}>
-                <h3 style={{ margin: '0 0 16px 0' }}>
-                  &apos;{pendingIssue.title}&apos; 보류 사유
-                </h3>
-                <form onSubmit={handleConfirmPending}>
-                  <textarea 
-                    value={pendingReason} 
-                    onChange={(e) => setPendingReason(e.target.value)} 
-                    placeholder="보류하는 이유를 입력하세요..." 
-                    style={{ 
-                      width: '100%', 
-                      minHeight: '100px', 
-                      boxSizing: 'border-box',
-                      padding: '8px',
-                      borderRadius: '6px',
-                      border: '1px solid #d1d9e0',
-                      resize: 'vertical'
-                    }} 
-                    required 
-                  />
-                  <div style={{ 
-                    marginTop: '16px', 
-                    display: 'flex', 
-                    justifyContent: 'flex-end', 
-                    gap: '8px' 
-                  }}>
-                    <button 
-                      type="button" 
-                      onClick={() => setIsPendingModalOpen(false)}
-                      style={{
-                        padding: '8px 16px',
-                        backgroundColor: '#f6f8fa',
-                        border: '1px solid #d1d9e0',
-                        borderRadius: '6px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      취소
-                    </button>
-                    <button 
-                      type="submit" 
-                      disabled={isLoading}
-                      style={{
-                        padding: '8px 16px',
-                        backgroundColor: '#d1242f',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: isLoading ? 'not-allowed' : 'pointer'
-                      }}
-                    >
-                      {isLoading ? '...' : '확인'}
-                    </button>
-                  </div>
-                </form>
+              {/* Notes Section - 1/4 */}
+              <div className="col-span-1">
+                <div className="card p-4">
+                  <NotesList issues={issues} />
+                </div>
               </div>
             </div>
+          </>
         )}
-      </main>
+      </div>
+
+      {/* Pending Modal */}
+      {isPendingModalOpen && pendingIssue && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="card w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">
+              '{pendingIssue.title}' 보류 사유
+            </h3>
+            <form onSubmit={handleConfirmPending}>
+              <textarea 
+                value={pendingReason} 
+                onChange={(e) => setPendingReason(e.target.value)} 
+                placeholder="보류하는 이유를 입력하세요..." 
+                className="textarea mb-4"
+                required 
+              />
+              <div className="flex justify-end gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsPendingModalOpen(false)}
+                  className="btn btn-secondary"
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="btn btn-warning"
+                >
+                  {isLoading ? <div className="spinner"></div> : '확인'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
