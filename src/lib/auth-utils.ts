@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth";
 
@@ -18,7 +17,7 @@ export async function getAccessToken(request?: Request): Promise<string | null> 
         if (session?.accessToken) {
             return session.accessToken;
         }
-    } catch (error) {
+    } catch {
         console.log("Session not available, checking Authorization header");
     }
 
@@ -57,12 +56,11 @@ export async function requireAuth(request?: Request): Promise<{
         return null;
     }
 
-    // 세션에서 온 토큰인지 확인
-    let fromSession = false;
+    let fromSession: boolean;
     try {
         const session: CustomSession | null = await getServerSession(authOptions);
         fromSession = session?.accessToken === token;
-    } catch (error) {
+    } catch {
         fromSession = false;
     }
 
