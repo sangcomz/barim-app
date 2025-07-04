@@ -800,7 +800,7 @@ export default function HomePage() {
             <div className="grid grid-cols-4 gap-6">
               {/* Kanban Board - 3/4 */}
               <div className="col-span-3">
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 gap-4 mb-6">
                   {/* TODO Column */}
                   <div className="group">
                     <div className="card p-4 h-fit min-h-[200px]" style={{ 
@@ -914,8 +914,10 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* PENDING Column */}
+                {/* Bottom Row: PENDING (Full Width) */}
+                <div className="w-full">
                   <div className="group">
                     <div className="card p-4 h-fit min-h-[200px]" style={{
                       background: 'var(--card)',
@@ -930,7 +932,7 @@ export default function HomePage() {
                           </span>
                         </div>
                       </h3>
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {pendingTasks.map(task => (
                           <div key={task.id} className="group">
                             <KanbanCard
@@ -942,7 +944,7 @@ export default function HomePage() {
                           </div>
                         ))}
                         {pendingTasks.length === 0 && (
-                          <div className="flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
+                          <div className="col-span-full flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
                             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
                               <span className="text-lg">⏸️</span>
                             </div>
