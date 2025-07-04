@@ -462,6 +462,7 @@ export default function HomePage() {
   const [createItemType, setCreateItemType] = useState<'Task' | 'Note'>('Task');
   const [newTags, setNewTags] = useState('');
   const [pendingReason, setPendingReason] = useState('');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // API 호출 함수들
   const fetchRepos = async () => {
@@ -488,12 +489,22 @@ export default function HomePage() {
     }
   };
 
-  const fetchIssues = useCallback(async (projectName: string) => {
+  const fetchIssues = useCallback(async (projectName: string, pageNum?: number) => {
     if (!projectName) return;
     setIsLoading(true);
     setError(null);
+    
+    const currentPage = pageNum !== undefined ? pageNum : page;
+    
     try {
-      const response = await fetch(`/api/issues?repo=${projectName}&page=${page}`);
+      // 캐시 무효화를 위한 타임스탬프 추가
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/issues?repo=${projectName}&page=${currentPage}&_t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch issues.');
       const data = await response.json();
       setIssues(data.issues || data);
@@ -546,7 +557,25 @@ export default function HomePage() {
       setNewIssueBody('');
       setNewTags('');
       setIsCreateModalOpen(false);
-      await fetchIssues(selectedRepo);
+      
+      console.log('새 항목 생성 완료, 리프레시 시작...');
+      
+      // 강제 리렌더링 트리거
+      setRefreshTrigger(prev => prev + 1);
+      
+      // 강제 리프레시 - 여러 단계로 확실하게 처리
+      setPage(1);
+      
+      // 즉시 한 번 호출
+      console.log('첫 번째 fetchIssues 호출...');
+      await fetchIssues(selectedRepo, 1);
+      
+      // 추가 보장을 위해 약간의 지연 후 다시 호출
+      setTimeout(async () => {
+        console.log('두 번째 fetchIssues 호출...');
+        await fetchIssues(selectedRepo, 1);
+        setRefreshTrigger(prev => prev + 1);
+      }, 1000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(errorMessage);
@@ -675,6 +704,14 @@ export default function HomePage() {
     if (selectedRepo) fetchIssues(selectedRepo);
   }, [page, selectedRepo, fetchIssues]);
 
+  // 강제 리프레시 트리거
+  useEffect(() => {
+    if (selectedRepo && refreshTrigger > 0) {
+      console.log('강제 리프레시 트리거 발동:', refreshTrigger);
+      fetchIssues(selectedRepo, 1);
+    }
+  }, [refreshTrigger, selectedRepo, fetchIssues]);
+
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -739,6 +776,15 @@ export default function HomePage() {
           </div>
         </div>
       </header>
+
+      {/* Loading Progress Bar */}
+      {isLoading && (
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <div className="h-1 bg-gray-200 dark:bg-gray-700">
+            <div className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500 animate-pulse"></div>
+          </div>
+        </div>
+      )}
 
       <div className="container mx-auto py-6">
         {selectedRepo && (
@@ -1037,9 +1083,16 @@ export default function HomePage() {
                 <button 
                   type="submit" 
                   disabled={isLoading}
-                  className="btn btn-primary text-sm px-3 py-2"
+                  className={`btn btn-primary text-sm px-3 py-2 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
                 >
-                  {isLoading ? <div className="spinner"></div> : `${createItemType === 'Task' ? '📋' : '📝'} 생성`}
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      생성 중...
+                    </div>
+                  ) : (
+                    `${createItemType === 'Task' ? '📋' : '📝'} 생성`
+                  )}
                 </button>
               </div>
             </form>
@@ -1073,9 +1126,16 @@ export default function HomePage() {
                 <button 
                   type="submit" 
                   disabled={isLoading}
-                  className="btn btn-warning"
+                  className={`btn btn-warning ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
                 >
-                  {isLoading ? <div className="spinner"></div> : '확인'}
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      처리 중...
+                    </div>
+                  ) : (
+                    '확인'
+                  )}
                 </button>
               </div>
             </form>
