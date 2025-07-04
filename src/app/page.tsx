@@ -303,16 +303,37 @@ function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
   const isTodo = labels.includes('TODO');
   const isInProgress = labels.includes('IN PROGRESS');
   const isDone = labels.includes('DONE');
+  const isPending = labels.includes('PENDING');
+
+  // 표시할 라벨만 필터링 (상태 라벨만)
+  const statusLabels = issue.labels.filter(label => 
+    ['TODO', 'IN PROGRESS', 'PENDING', 'DONE'].includes(label.name)
+  );
+
+  // 상태에 따른 카드 스타일링
+  const getCardStyle = () => {
+    if (isDone) return 'border-l-green-500 bg-green-50 dark:bg-green-900/10';
+    if (isPending) return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/10';
+    if (isInProgress) return 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/10';
+    return 'border-l-gray-400 bg-gray-50 dark:bg-gray-900/10';
+  };
 
   return (
-    <div className={`card mb-4 ${isDone ? 'opacity-60' : ''} ${isTask ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-purple-500'}`}>
+    <div className={`relative mb-3 p-4 rounded-xl border-l-4 transition-all duration-200 hover:shadow-lg hover:scale-105 ${getCardStyle()} ${isDone ? 'opacity-75' : ''}`}
+         style={{ 
+           background: isDone ? 'var(--card)' : 'var(--card)',
+           border: '1px solid var(--border)',
+           borderLeftWidth: '4px'
+         }}>
+      
+      {/* Header with title and delete button */}
       <div className="flex justify-between items-start mb-3">
         <a 
           href={issue.html_url} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className={`font-medium hover:text-blue-600 ${isDone ? 'line-through' : ''}`}
-          style={{ color: 'var(--foreground)' }}
+          className={`font-semibold text-sm leading-tight hover:text-blue-600 transition-colors ${isDone ? 'line-through' : ''}`}
+          style={{ color: isDone ? 'var(--secondary)' : 'var(--foreground)' }}
         >
           {issue.title}
         </a>
@@ -320,7 +341,7 @@ function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
           <button 
             onClick={() => onDelete(issue.number)}
             disabled={isLoading}
-            className="hover:text-red-500 p-1"
+            className="opacity-0 group-hover:opacity-100 hover:text-red-500 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 ml-2 flex-shrink-0"
             style={{ color: 'var(--secondary)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,52 +351,77 @@ function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-1 mb-3">
-        {issue.labels.map(label => (
-          <span 
-            key={label.name}
-            className="text-xs px-2 py-1 rounded-full text-white font-medium"
-            style={{ backgroundColor: `#${label.color || 'gray'}` }}
-          >
-            {label.name}
-          </span>
-        ))}
-      </div>
+      {/* Status Labels */}
+      {statusLabels.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-3">
+          {statusLabels.map(label => {
+            const getStatusColor = (status: string) => {
+              switch(status) {
+                case 'TODO': return 'bg-gray-500';
+                case 'IN PROGRESS': return 'bg-blue-500';
+                case 'PENDING': return 'bg-yellow-500';
+                case 'DONE': return 'bg-green-500';
+                default: return 'bg-gray-500';
+              }
+            };
 
+            return (
+              <span 
+                key={label.name}
+                className={`text-xs px-2 py-1 rounded-full text-white font-medium ${getStatusColor(label.name)}`}
+              >
+                {label.name}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Body text */}
       {issue.body && (
-        <p className="text-sm mb-3 line-clamp-3" style={{ color: 'var(--secondary)' }}>
+        <p className="text-xs mb-3 line-clamp-2 leading-relaxed" style={{ color: 'var(--secondary)' }}>
           {issue.body}
         </p>
       )}
 
+      {/* Action buttons */}
       {isTask && !isDone && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-4">
           {isTodo && (
             <button 
               onClick={() => onUpdateState(issue, 'IN PROGRESS')}
-              className="btn btn-success text-xs px-3 py-1"
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
               disabled={isLoading}
             >
-              시작하기
+              🚀 시작
             </button>
           )}
           {isInProgress && (
             <>
               <button 
                 onClick={() => onUpdateState(issue, 'DONE')}
-                className="btn btn-success text-xs px-3 py-1"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
                 disabled={isLoading}
               >
-                완료
+                ✅ 완료
               </button>
               <button 
                 onClick={() => onUpdateState(issue, 'PENDING')}
-                className="btn btn-warning text-xs px-3 py-1"
+                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
                 disabled={isLoading}
               >
-                보류
+                ⏸️ 보류
               </button>
             </>
+          )}
+          {isPending && (
+            <button 
+              onClick={() => onUpdateState(issue, 'IN PROGRESS')}
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
+              disabled={isLoading}
+            >
+              🔄 재시작
+            </button>
           )}
         </div>
       )}
@@ -756,71 +802,155 @@ export default function HomePage() {
               <div className="col-span-3">
                 <div className="grid grid-cols-4 gap-4">
                   {/* TODO Column */}
-                  <div className="card p-4">
-                    <h3 className="font-semibold mb-4 flex items-center gap-2">
-                      <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                      TODO ({todoTasks.length})
-                    </h3>
-                    {todoTasks.map(task => (
-                      <KanbanCard 
-                        key={task.id} 
-                        issue={task} 
-                        onUpdateState={handleUpdateState}
-                        onDelete={handleCloseIssue}
-                        isLoading={isLoading}
-                      />
-                    ))}
+                  <div className="group">
+                    <div className="card p-4 h-fit min-h-[200px]" style={{ 
+                      background: 'var(--card)',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <h3 className="font-bold mb-4 flex items-center gap-3 text-sm">
+                        <div className="w-3 h-3 bg-gray-400 rounded-full shadow-sm"></div>
+                        <span>TODO</span>
+                        <div className="w-6 h-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center ml-auto">
+                          <span className="text-xs font-bold" style={{ color: 'var(--secondary)' }}>
+                            {todoTasks.length}
+                          </span>
+                        </div>
+                      </h3>
+                      <div className="space-y-3">
+                        {todoTasks.map(task => (
+                          <div key={task.id} className="group">
+                            <KanbanCard 
+                              issue={task} 
+                              onUpdateState={handleUpdateState}
+                              onDelete={handleCloseIssue}
+                              isLoading={isLoading}
+                            />
+                          </div>
+                        ))}
+                        {todoTasks.length === 0 && (
+                          <div className="flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
+                            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                              <span className="text-lg">📝</span>
+                            </div>
+                            할 일이 없습니다
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* IN PROGRESS Column */}
-                  <div className="card p-4">
-                    <h3 className="font-semibold mb-4 flex items-center gap-2">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      IN PROGRESS ({inProgressTasks.length})
-                    </h3>
-                    {inProgressTasks.map(task => (
-                      <KanbanCard 
-                        key={task.id} 
-                        issue={task} 
-                        onUpdateState={handleUpdateState}
-                        onDelete={handleCloseIssue}
-                        isLoading={isLoading}
-                      />
-                    ))}
+                  <div className="group">
+                    <div className="card p-4 h-fit min-h-[200px]" style={{
+                      background: 'var(--card)',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <h3 className="font-bold mb-4 flex items-center gap-3 text-sm">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full shadow-sm"></div>
+                        <span>IN PROGRESS</span>
+                        <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center ml-auto">
+                          <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                            {inProgressTasks.length}
+                          </span>
+                        </div>
+                      </h3>
+                      <div className="space-y-3">
+                        {inProgressTasks.map(task => (
+                          <div key={task.id} className="group">
+                            <KanbanCard
+                              issue={task}
+                              onUpdateState={handleUpdateState}
+                              onDelete={handleCloseIssue}
+                              isLoading={isLoading}
+                            />
+                          </div>
+                        ))}
+                        {inProgressTasks.length === 0 && (
+                          <div className="flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
+                            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                              <span className="text-lg">🚀</span>
+                            </div>
+                            진행 중인 작업이 없습니다
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* DONE Column */}
-                  <div className="card p-4">
-                    <h3 className="font-semibold mb-4 flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      DONE ({doneTasks.length})
-                    </h3>
-                    {doneTasks.map(task => (
-                      <KanbanCard 
-                        key={task.id} 
-                        issue={task} 
-                        onUpdateState={handleUpdateState}
-                        onDelete={handleCloseIssue}
-                        isLoading={isLoading}
-                      />
-                    ))}
+                  <div className="group">
+                    <div className="card p-4 h-fit min-h-[200px]" style={{
+                      background: 'var(--card)',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <h3 className="font-bold mb-4 flex items-center gap-3 text-sm">
+                        <div className="w-3 h-3 bg-green-500 rounded-full shadow-sm"></div>
+                        <span>DONE</span>
+                        <div className="w-6 h-6 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center ml-auto">
+                          <span className="text-xs font-bold text-green-700 dark:text-green-300">
+                            {doneTasks.length}
+                          </span>
+                        </div>
+                      </h3>
+                      <div className="space-y-3">
+                        {doneTasks.map(task => (
+                          <div key={task.id} className="group">
+                            <KanbanCard
+                              issue={task}
+                              onUpdateState={handleUpdateState}
+                              onDelete={handleCloseIssue}
+                              isLoading={isLoading}
+                            />
+                          </div>
+                        ))}
+                        {doneTasks.length === 0 && (
+                          <div className="flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
+                            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                              <span className="text-lg">✅</span>
+                            </div>
+                            완료된 작업이 없습니다
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* PENDING Column */}
-                  <div className="card p-4">
-                    <h3 className="font-semibold mb-4 flex items-center gap-2">
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      PENDING ({pendingTasks.length})
-                    </h3>
-                    {pendingTasks.map(task => (
-                      <KanbanCard 
-                        key={task.id} 
-                        issue={task} 
-                        onUpdateState={handleUpdateState}
-                        onDelete={handleCloseIssue}
-                        isLoading={isLoading}
-                      />
-                    ))}
+                  <div className="group">
+                    <div className="card p-4 h-fit min-h-[200px]" style={{
+                      background: 'var(--card)',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <h3 className="font-bold mb-4 flex items-center gap-3 text-sm">
+                        <div className="w-3 h-3 bg-yellow-500 rounded-full shadow-sm"></div>
+                        <span>PENDING</span>
+                        <div className="w-6 h-6 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center ml-auto">
+                          <span className="text-xs font-bold text-yellow-700 dark:text-yellow-300">
+                            {pendingTasks.length}
+                          </span>
+                        </div>
+                      </h3>
+                      <div className="space-y-3">
+                        {pendingTasks.map(task => (
+                          <div key={task.id} className="group">
+                            <KanbanCard
+                              issue={task}
+                              onUpdateState={handleUpdateState}
+                              onDelete={handleCloseIssue}
+                              isLoading={isLoading}
+                            />
+                          </div>
+                        ))}
+                        {pendingTasks.length === 0 && (
+                          <div className="flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
+                            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                              <span className="text-lg">⏸️</span>
+                            </div>
+                            보류된 작업이 없습니다
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
