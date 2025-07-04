@@ -430,7 +430,9 @@ export default function HomePage() {
   const [newIssueBody, setNewIssueBody] = useState('');
   const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
   const [pendingIssue, setPendingIssue] = useState<Issue | null>(null);
-  const [pendingReason, setPendingReason] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createItemType, setCreateItemType] = useState<'Task' | 'Note'>('Task');
+  const [newTags, setNewTags] = useState('');
 
   // API 호출 함수들
   const fetchRepos = async () => {
@@ -477,7 +479,7 @@ export default function HomePage() {
     }
   }, [page]);
 
-  const handleCreateIssue = async (e: FormEvent, issueType: 'Task' | 'Note') => {
+  const handleCreateIssue = async (e: FormEvent) => {
     e.preventDefault();
     if (!newIssueTitle) {
       alert('제목을 입력해주세요.');
@@ -489,20 +491,33 @@ export default function HomePage() {
     }
     setIsLoading(true);
     try {
+      // 태그 처리 - Note일 때만 태그를 추가
+      let bodyWithTags = newIssueBody;
+      if (createItemType === 'Note' && newTags.trim()) {
+        const tags = newTags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        const tagLabels = tags.map(tag => `tag:${tag}`);
+        // body에 태그 정보도 추가
+        bodyWithTags = newIssueBody + (newIssueBody ? '\n\n' : '') + `Tags: ${tags.join(', ')}`;
+      }
+
       const response = await fetch('/api/issues', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           title: newIssueTitle, 
-          body: newIssueBody, 
+          body: bodyWithTags, 
           repo: selectedRepo,
-          issueType 
+          issueType: createItemType,
+          tags: createItemType === 'Note' && newTags.trim() ? 
+            newTags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
         }),
       });
       if (!response.ok) throw new Error('Failed to create issue.');
 
       setNewIssueTitle('');
       setNewIssueBody('');
+      setNewTags('');
+      setIsCreateModalOpen(false);
       await fetchIssues(selectedRepo);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -700,40 +715,17 @@ export default function HomePage() {
       <div className="container mx-auto py-6">
         {selectedRepo && (
           <>
-            {/* Create New Item */}
-            <div className="card mb-6">
-              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--foreground)' }}>새 항목 생성</h2>
-              <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-                <input 
-                  type="text" 
-                  value={newIssueTitle} 
-                  onChange={(e) => setNewIssueTitle(e.target.value)} 
-                  placeholder="제목을 입력하세요" 
-                  className="input"
-                />
-                <textarea 
-                  value={newIssueBody} 
-                  onChange={(e) => setNewIssueBody(e.target.value)} 
-                  placeholder="상세 내용 (선택사항)" 
-                  className="textarea"
-                />
-                <div className="flex gap-3">
-                  <button 
-                    onClick={(e) => handleCreateIssue(e, 'Task')} 
-                    disabled={isLoading}
-                    className="btn btn-primary"
-                  >
-                    {isLoading ? <div className="spinner"></div> : '📋 Task 생성'}
-                  </button>
-                  <button 
-                    onClick={(e) => handleCreateIssue(e, 'Note')} 
-                    disabled={isLoading}
-                    className="btn btn-warning"
-                  >
-                    {isLoading ? <div className="spinner"></div> : '📝 Note 생성'}
-                  </button>
-                </div>
-              </form>
+            {/* Create New Item Button */}
+            <div className="mb-6">
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                새 항목 생성
+              </button>
             </div>
 
             {error && (
@@ -830,6 +822,116 @@ export default function HomePage() {
           </>
         )}
       </div>
+
+      {/* Create Item Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="card w-full max-w-md mx-4" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">새 항목 생성</h3>
+              <button 
+                onClick={() => setIsCreateModalOpen(false)}
+                className="hover:text-red-500 p-1"
+                style={{ color: 'var(--secondary)' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateIssue} className="space-y-3">
+              {/* Type Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>타입</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="itemType"
+                      value="Task"
+                      checked={createItemType === 'Task'}
+                      onChange={(e) => setCreateItemType(e.target.value as 'Task' | 'Note')}
+                      className="radio"
+                    />
+                    <span className="text-sm">📋 Task</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="itemType"
+                      value="Note"
+                      checked={createItemType === 'Note'}
+                      onChange={(e) => setCreateItemType(e.target.value as 'Task' | 'Note')}
+                      className="radio"
+                    />
+                    <span className="text-sm">📝 Note</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Title */}
+              <div className="space-y-1">
+                <label className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>제목</label>
+                <input 
+                  type="text" 
+                  value={newIssueTitle} 
+                  onChange={(e) => setNewIssueTitle(e.target.value)} 
+                  placeholder="제목을 입력하세요" 
+                  className="input"
+                  required
+                />
+              </div>
+
+              {/* Body */}
+              <div className="space-y-1">
+                <label className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>상세 내용</label>
+                <textarea 
+                  value={newIssueBody} 
+                  onChange={(e) => setNewIssueBody(e.target.value)} 
+                  placeholder="상세 내용 (선택사항)" 
+                  className="textarea"
+                  rows={3}
+                />
+              </div>
+
+              {/* Tags - Only for Note */}
+              {createItemType === 'Note' && (
+                <div className="space-y-1">
+                  <label className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>태그</label>
+                  <input 
+                    type="text" 
+                    value={newTags} 
+                    onChange={(e) => setNewTags(e.target.value)} 
+                    placeholder="태그를 쉼표로 구분하여 입력하세요" 
+                    className="input"
+                  />
+                  <p className="text-xs" style={{ color: 'var(--secondary)' }}>
+                    "tag:태그명" 형태의 라벨로 추가됩니다.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="btn btn-secondary text-sm px-3 py-2"
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="btn btn-primary text-sm px-3 py-2"
+                >
+                  {isLoading ? <div className="spinner"></div> : `${createItemType === 'Task' ? '📋' : '📝'} 생성`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Pending Modal */}
       {isPendingModalOpen && pendingIssue && (

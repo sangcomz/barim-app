@@ -135,7 +135,7 @@ export async function POST(request: Request) {
     }
 
     const octokit = new Octokit({ auth: auth.token });
-    const { title, body, issueType, repo: projectLabel } = await request.json();
+    const { title, body, issueType, repo: projectLabel, tags } = await request.json();
 
     if (!title || !issueType || !projectLabel) {
         return NextResponse.json(
@@ -177,6 +177,19 @@ export async function POST(request: Request) {
             { name: 'PENDING', color: 'b33a3a', description: 'Task is pending' },
         ];
 
+        // 태그가 있는 경우 태그 라벨들도 추가
+        if (tags && Array.isArray(tags)) {
+            tags.forEach(tag => {
+                if (tag && tag.trim()) {
+                    labelsToEnsure.push({
+                        name: `tag:${tag.trim()}`,
+                        color: getRandomColor(),
+                        description: `Tag: ${tag.trim()}`
+                    });
+                }
+            });
+        }
+
         // 필요한 라벨들이 없으면 생성
         for (const label of labelsToEnsure) {
             if (!existingLabelNames.includes(label.name)) {
@@ -200,6 +213,14 @@ export async function POST(request: Request) {
             labelsToAdd.push('Task', 'TODO');
         } else if (issueType === 'Note') {
             labelsToAdd.push('Note');
+            // 태그가 있는 경우 태그 라벨들도 추가
+            if (tags && Array.isArray(tags)) {
+                tags.forEach(tag => {
+                    if (tag && tag.trim()) {
+                        labelsToAdd.push(`tag:${tag.trim()}`);
+                    }
+                });
+            }
         }
 
         // 이슈 생성
