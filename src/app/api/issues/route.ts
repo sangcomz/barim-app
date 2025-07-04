@@ -172,7 +172,7 @@ export async function POST(request: Request) {
             { name: 'Note', color: 'fbca04', description: 'Simple note' },
             { name: 'Task', color: '0075ca', description: 'A task that needs to be done' },
             { name: 'TODO', color: 'd876e3', description: 'Task to be done' },
-            { name: 'DOING', color: '008672', description: 'Task in progress' },
+            { name: 'IN PROGRESS', color: '008672', description: 'Task in progress' },
             { name: 'DONE', color: '0e8a16', description: 'Task completed' },
             { name: 'PENDING', color: 'b33a3a', description: 'Task is pending' },
         ];

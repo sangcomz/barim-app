@@ -152,7 +152,7 @@ function LandingPage() {
             </div>
             <h3 className="text-2xl font-semibold mb-6">칸반 보드</h3>
             <p className="text-lg leading-relaxed" style={{ color: 'var(--secondary)' }}>
-              TODO, DOING, DONE, PENDING 상태로 작업을 시각적으로 관리하고 
+              TODO, IN PROGRESS, DONE, PENDING 상태로 작업을 시각적으로 관리하고
               원클릭으로 쉽게 상태를 변경할 수 있습니다.
             </p>
           </div>
@@ -281,14 +281,14 @@ function LandingPage() {
 // 칸반 카드 컴포넌트
 function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
   issue: Issue;
-  onUpdateState: (issue: Issue, newState: 'DOING' | 'DONE' | 'PENDING') => void;
+  onUpdateState: (issue: Issue, newState: 'IN PROGRESS' | 'DONE' | 'PENDING') => void;
   onDelete: (issueNumber: number) => void;
   isLoading: boolean;
 }) {
   const labels = issue.labels.map(l => l.name);
   const isTask = labels.includes('Task');
   const isTodo = labels.includes('TODO');
-  const isDoing = labels.includes('DOING');
+  const isInProgress = labels.includes('IN PROGRESS');
   const isDone = labels.includes('DONE');
 
   return (
@@ -339,14 +339,14 @@ function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
         <div className="flex gap-2">
           {isTodo && (
             <button 
-              onClick={() => onUpdateState(issue, 'DOING')}
+              onClick={() => onUpdateState(issue, 'IN PROGRESS')}
               className="btn btn-success text-xs px-3 py-1"
               disabled={isLoading}
             >
               시작하기
             </button>
           )}
-          {isDoing && (
+          {isInProgress && (
             <>
               <button 
                 onClick={() => onUpdateState(issue, 'DONE')}
@@ -512,7 +512,7 @@ export default function HomePage() {
     }
   };
 
-  const handleUpdateState = async (issue: Issue, newState: 'DOING' | 'DONE' | 'PENDING') => {
+  const handleUpdateState = async (issue: Issue, newState: 'IN PROGRESS' | 'DONE' | 'PENDING') => {
     if (newState === 'PENDING') {
       setPendingIssue(issue);
       setIsPendingModalOpen(true);
@@ -523,12 +523,12 @@ export default function HomePage() {
     let newLabels = issue.labels.map(l => l.name);
     const updatePayload: UpdatePayload = { repo: 'barim-data' };
 
-    if (newState === 'DOING') {
+    if (newState === 'IN PROGRESS') {
       newLabels = newLabels.filter(name => name !== 'TODO');
-      newLabels.push('DOING');
+      newLabels.push('IN PROGRESS');
       updatePayload.labels = newLabels;
     } else if (newState === 'DONE') {
-      newLabels = newLabels.filter(name => name !== 'DOING');
+      newLabels = newLabels.filter(name => name !== 'IN PROGRESS');
       newLabels.push('DONE');
       updatePayload.labels = newLabels;
       updatePayload.state = 'closed';
@@ -581,7 +581,9 @@ export default function HomePage() {
 
     setIsLoading(true);
     try {
-      const newLabels = pendingIssue.labels.map(l => l.name).filter(name => name !== 'DOING' && name !== 'TODO');
+      const newLabels = pendingIssue.labels.map(l => l.name).filter(name => 
+        name !== 'IN PROGRESS' && name !== 'TODO'
+      );
       newLabels.push('PENDING');
       await fetch(`/api/issues/${pendingIssue.number}`, {
         method: 'POST',
@@ -645,7 +647,7 @@ export default function HomePage() {
   // 칸반 보드용 이슈들 분류
   const tasks = issues.filter(issue => issue.labels.some(label => label.name === 'Task'));
   const todoTasks = tasks.filter(issue => issue.labels.some(label => label.name === 'TODO'));
-  const doingTasks = tasks.filter(issue => issue.labels.some(label => label.name === 'DOING'));
+  const inProgressTasks = tasks.filter(issue => issue.labels.some(label => label.name === 'IN PROGRESS'));
   const doneTasks = tasks.filter(issue => issue.labels.some(label => label.name === 'DONE'));
   const pendingTasks = tasks.filter(issue => issue.labels.some(label => label.name === 'PENDING'));
 
@@ -765,13 +767,13 @@ export default function HomePage() {
                     ))}
                   </div>
 
-                  {/* DOING Column */}
+                  {/* IN PROGRESS Column */}
                   <div className="card p-4">
                     <h3 className="font-semibold mb-4 flex items-center gap-2">
                       <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      DOING ({doingTasks.length})
+                      IN PROGRESS ({inProgressTasks.length})
                     </h3>
-                    {doingTasks.map(task => (
+                    {inProgressTasks.map(task => (
                       <KanbanCard 
                         key={task.id} 
                         issue={task} 
