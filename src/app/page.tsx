@@ -667,12 +667,12 @@ export default function HomePage() {
               </div>
 
               {/* Project Selector */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <select
                   value={selectedRepo}
                   onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedRepo(e.target.value)}
                   className="select text-sm"
-                  style={{ minWidth: '200px' }}
+                  style={{ minWidth: '280px' }}
                 >
                   <option value="">-- 프로젝트 선택 --</option>
                   {allRepos.map(repo => (
@@ -681,8 +681,8 @@ export default function HomePage() {
                 </select>
 
                 {selectedRepo && (
-                  <div className="text-sm" style={{ color: 'var(--secondary)' }}>
-                    {tasks.length}개 작업 · {issues.filter(i => i.labels.some(l => l.name === 'Note')).length}개 노트
+                  <div className="text-xs text-center px-2" style={{ color: 'var(--secondary)', width: '100%' }}>
+                    <div className="text-xs">{tasks.length}개 작업 / {issues.filter(i => i.labels.some(l => l.name === 'Note')).length}개 노트</div>
                   </div>
                 )}
               </div>
