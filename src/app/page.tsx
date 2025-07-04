@@ -123,9 +123,22 @@ function LandingPage() {
               Barim
             </span>
           </h1>
-          <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto leading-relaxed" style={{ color: 'var(--secondary)' }}>
+          <p className="text-xl md:text-2xl mb-4 max-w-3xl mx-auto leading-relaxed" style={{ color: 'var(--secondary)' }}>
             GitHub Issues를 활용한 스마트한 프로젝트 관리 도구
           </p>
+          <div className="mb-12 max-w-2xl mx-auto p-6 rounded-2xl" style={{
+            background: 'rgba(var(--card-rgb), 0.5)',
+            border: '1px solid var(--border)'
+          }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--secondary)' }}>
+              <span className="font-semibold" style={{ color: 'var(--foreground)' }}>적바림</span>은 
+              나중에 참고하기 위해 글로 간단히 적어 두는 것을 뜻하는 순우리말입니다.
+            </p>
+            <p className="text-sm leading-relaxed mt-2" style={{ color: 'var(--secondary)' }}>
+              <span className="font-semibold text-blue-600">Barim</span>은 이 아름다운 우리말에서 이름을 따온 
+              현대적인 작업 관리 도구입니다.
+            </p>
+          </div>
           <button 
             onClick={() => signIn('github')} 
             className="btn btn-primary text-lg px-8 py-4 shadow-lg hover:shadow-xl mx-auto"
