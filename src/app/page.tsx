@@ -537,7 +537,7 @@ export default function HomePage() {
 
     try {
       const response = await fetch(`/api/issues/${issue.number}`, {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatePayload),
       });
@@ -556,7 +556,7 @@ export default function HomePage() {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/issues/${issueNumber}`, {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           repo: 'barim-data',
@@ -584,7 +584,7 @@ export default function HomePage() {
       const newLabels = pendingIssue.labels.map(l => l.name).filter(name => name !== 'DOING' && name !== 'TODO');
       newLabels.push('PENDING');
       await fetch(`/api/issues/${pendingIssue.number}`, {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           repo: 'barim-data',

@@ -5,8 +5,8 @@ import {requireAuth} from "@/lib/auth-utils";
 // 고정 레포지토리 이름 (물리적 저장소)
 const PHYSICAL_REPO = "barim-data";
 
-// PATCH: barim-data 레포의 특정 이슈 상태 및 라벨 업데이트
-export async function PATCH(
+// POST: barim-data 레포의 특정 이슈 상태 및 라벨 업데이트
+export async function POST(
     request: Request,
     {params}: { params: Promise<{ issue_number: string }> }
 ) {
