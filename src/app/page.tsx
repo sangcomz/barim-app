@@ -797,7 +797,7 @@ export default function HomePage() {
                           </div>
                         ))}
                         {todoTasks.length === 0 && (
-                          <div className="flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
+                          <div className="flex flex-col items-center justify-center text-center py-20 text-xs mb-4" style={{ color: 'var(--secondary)' }}>
                             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                               <span className="text-lg">📝</span>
                             </div>
@@ -835,7 +835,7 @@ export default function HomePage() {
                           </div>
                         ))}
                         {inProgressTasks.length === 0 && (
-                          <div className="flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
+                          <div className="flex flex-col items-center justify-center text-center py-20 text-xs mb-4" style={{ color: 'var(--secondary)' }}>
                             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                               <span className="text-lg">🚀</span>
                             </div>
@@ -873,7 +873,7 @@ export default function HomePage() {
                           </div>
                         ))}
                         {doneTasks.length === 0 && (
-                          <div className="flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
+                          <div className="flex flex-col items-center justify-center text-center py-20 text-xs mb-4" style={{ color: 'var(--secondary)' }}>
                             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                               <span className="text-lg">✅</span>
                             </div>
