@@ -2,6 +2,8 @@
 
 import {useState, useEffect, FormEvent, ChangeEvent, useCallback} from 'react';
 import {useSession, signIn, signOut} from "next-auth/react";
+import {useLanguage} from '@/contexts/LanguageContext';
+import {LanguageToggle} from '@/components/LanguageToggle';
 
 // 데이터 타입 정의
 interface Label {
@@ -34,6 +36,7 @@ interface UpdatePayload {
 // 다크모드 토글 컴포넌트
 function ThemeToggle() {
     const [isDark, setIsDark] = useState(false);
+    const {t} = useLanguage();
 
     useEffect(() => {
         // 초기 테마 확인
@@ -56,7 +59,7 @@ function ThemeToggle() {
         <button
             onClick={toggleTheme}
             className="btn btn-secondary p-2"
-            title={isDark ? "라이트 모드로 변경" : "다크 모드로 변경"}
+            title={isDark ? t('lightMode') : t('darkMode')}
         >
             {isDark ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,6 +79,7 @@ function ThemeToggle() {
 // 로그인 전 랜딩 페이지 컴포넌트
 function LandingPage() {
     const [isScrolled, setIsScrolled] = useState(false);
+    const {t} = useLanguage();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -91,14 +95,17 @@ function LandingPage() {
             background: 'var(--background)',
             backgroundImage: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)'
         }}>
-            {/* Fixed Theme Toggle - only visible when NOT scrolled */}
+            {/* Fixed Controls - only visible when NOT scrolled */}
             <div className={`fixed top-6 right-6 z-50 transition-all duration-300 ${
                 isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
             }`}>
-                <ThemeToggle/>
+                <div className="flex gap-3">
+                    <LanguageToggle/>
+                    <ThemeToggle/>
+                </div>
             </div>
 
-            {/* Floating Header - visible when scrolled, includes theme toggle */}
+            {/* Floating Header - visible when scrolled, includes controls */}
             <header
                 className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
                     isScrolled ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
@@ -112,7 +119,10 @@ function LandingPage() {
                 <div className="container mx-auto">
                     <div className="flex justify-between items-center py-4">
                         <h1 className="text-xl font-bold" style={{color: 'var(--foreground)'}}>Barim</h1>
-                        <ThemeToggle/>
+                        <div className="flex gap-3">
+                            <LanguageToggle/>
+                            <ThemeToggle/>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -127,19 +137,17 @@ function LandingPage() {
                     </h1>
                     <p className="text-xl md:text-2xl mb-4 max-w-3xl mx-auto leading-relaxed"
                        style={{color: 'var(--secondary)'}}>
-                        GitHub Issues를 활용한 스마트한 프로젝트 관리 도구
+                        {t('tagline')}
                     </p>
                     <div className="mb-12 max-w-2xl mx-auto p-6 rounded-2xl" style={{
                         background: 'rgba(var(--card-rgb), 0.5)',
                         border: '1px solid var(--border)'
                     }}>
                         <p className="text-sm leading-relaxed" style={{color: 'var(--secondary)'}}>
-                            <span className="font-semibold" style={{color: 'var(--foreground)'}}>적바림</span>은
-                            나중에 참고하기 위해 글로 간단히 적어 두는 것을 뜻하는 순우리말입니다.
+                            {t('barimDescription')}
                         </p>
                         <p className="text-sm leading-relaxed mt-2" style={{color: 'var(--secondary)'}}>
-                            <span className="font-semibold text-blue-600">Barim</span>은 이 아름다운 우리말에서 이름을 따온
-                            현대적인 작업 관리 도구입니다.
+                            {t('barimMeaning')}
                         </p>
                     </div>
                     <button
@@ -151,7 +159,7 @@ function LandingPage() {
                                   d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
                                   clipRule="evenodd"/>
                         </svg>
-                        GitHub으로 시작하기
+                        {t('startWithGithub')}
                     </button>
                 </div>
 
@@ -170,10 +178,9 @@ function LandingPage() {
                                 </svg>
                             </div>
                         </div>
-                        <h3 className="text-2xl font-semibold mb-6">칸반 보드</h3>
+                        <h3 className="text-2xl font-semibold mb-6">{t('kanbanBoard')}</h3>
                         <p className="text-lg leading-relaxed" style={{color: 'var(--secondary)'}}>
-                            TODO, IN PROGRESS, DONE, PENDING 상태로 작업을 시각적으로 관리하고
-                            원클릭으로 쉽게 상태를 변경할 수 있습니다.
+                            {t('kanbanDescription')}
                         </p>
                     </div>
 
@@ -190,17 +197,16 @@ function LandingPage() {
                                 </svg>
                             </div>
                         </div>
-                        <h3 className="text-2xl font-semibold mb-6">노트 기능</h3>
+                        <h3 className="text-2xl font-semibold mb-6">{t('noteFeature')}</h3>
                         <p className="text-lg leading-relaxed" style={{color: 'var(--secondary)'}}>
-                            프로젝트별로 노트를 정리하고 아이디어를 기록하여
-                            체계적인 지식 관리가 가능합니다.
+                            {t('noteDescription')}
                         </p>
                     </div>
                 </div>
 
                 {/* Additional Features */}
                 <div className="card shadow-xl p-12 max-w-6xl mx-auto w-full mb-8">
-                    <h2 className="text-4xl font-bold text-center mb-12">왜 Barim인가요?</h2>
+                    <h2 className="text-4xl font-bold text-center mb-12">{t('whyBarim')}</h2>
                     <div className="grid md:grid-cols-3 gap-12">
                         <div className="text-center">
                             <div className="flex justify-center mb-6">
@@ -215,9 +221,10 @@ function LandingPage() {
                                     </svg>
                                 </div>
                             </div>
-                            <h4 className="text-xl font-semibold mb-4">빠른 동기화</h4>
-                            <p className="text-lg leading-relaxed" style={{color: 'var(--secondary)'}}>GitHub Issues와
-                                실시간 동기화로 언제 어디서든 최신 상태 유지</p>
+                            <h4 className="text-xl font-semibold mb-4">{t('fastSync')}</h4>
+                            <p className="text-lg leading-relaxed" style={{color: 'var(--secondary)'}}>
+                                {t('fastSyncDescription')}
+                            </p>
                         </div>
                         <div className="text-center">
                             <div className="flex justify-center mb-6">
@@ -232,9 +239,10 @@ function LandingPage() {
                                     </svg>
                                 </div>
                             </div>
-                            <h4 className="text-xl font-semibold mb-4">안전한 관리</h4>
-                            <p className="text-lg leading-relaxed" style={{color: 'var(--secondary)'}}>GitHub OAuth 인증으로
-                                안전하고 신뢰할 수 있는 데이터 보호</p>
+                            <h4 className="text-xl font-semibold mb-4">{t('secureManagement')}</h4>
+                            <p className="text-lg leading-relaxed" style={{color: 'var(--secondary)'}}>
+                                {t('secureDescription')}
+                            </p>
                         </div>
                         <div className="text-center">
                             <div className="flex justify-center mb-6">
@@ -249,9 +257,10 @@ function LandingPage() {
                                     </svg>
                                 </div>
                             </div>
-                            <h4 className="text-xl font-semibold mb-4">IDE 플러그인 연동</h4>
-                            <p className="text-lg leading-relaxed" style={{color: 'var(--secondary)'}}>IntelliJ, VSCode
-                                등 주요 IDE 플러그인과 연동하여 개발 환경에서 바로 작업 관리</p>
+                            <h4 className="text-xl font-semibold mb-4">{t('ideIntegration')}</h4>
+                            <p className="text-lg leading-relaxed" style={{color: 'var(--secondary)'}}>
+                                {t('ideDescription')}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -302,7 +311,7 @@ function LandingPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                           d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                                 </svg>
-                                Report Issue
+                                {t('reportIssue')}
                             </a>
                         </div>
                     </div>
@@ -319,6 +328,7 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
     onEdit: (issue: Issue) => void;
     isLoading: boolean;
 }) {
+    const {t} = useLanguage();
     const labels = issue.labels.map(l => l.name);
     const isTask = labels.includes('Task');
     const isTodo = labels.includes('TODO');
@@ -361,7 +371,7 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
                         disabled={isLoading}
                         className="opacity-60 hover:opacity-100 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
                         style={{color: 'var(--secondary)'}}
-                        title="편집"
+                        title={t('edit')}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -395,7 +405,7 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
                             className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
                             disabled={isLoading}
                         >
-                            🚀 시작
+                            {t('start')}
                         </button>
                     )}
                     {isInProgress && (
@@ -405,14 +415,14 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
                                 className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
                                 disabled={isLoading}
                             >
-                                ✅ 완료
+                                {t('complete')}
                             </button>
                             <button
                                 onClick={() => onUpdateState(issue, 'PENDING')}
                                 className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
                                 disabled={isLoading}
                             >
-                                ⏸️ 보류
+                                {t('hold')}
                             </button>
                         </>
                     )}
@@ -422,7 +432,7 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
                             className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
                             disabled={isLoading}
                         >
-                            🔄 재시작
+                            {t('restart')}
                         </button>
                     )}
                 </div>
@@ -433,6 +443,7 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
 
 // 노트 리스트 컴포넌트
 function NotesList({issues, onEdit}: { issues: Issue[], onEdit: (issue: Issue) => void }) {
+    const {t} = useLanguage();
     const notes = issues.filter(issue => issue.labels.some(label => label.name === 'Note'));
 
     return (
@@ -442,7 +453,7 @@ function NotesList({issues, onEdit}: { issues: Issue[], onEdit: (issue: Issue) =
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
-                노트 ({notes.length})
+                {t('notes')} ({notes.length})
             </h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
                 {notes.map(note => (
@@ -455,7 +466,7 @@ function NotesList({issues, onEdit}: { issues: Issue[], onEdit: (issue: Issue) =
                             onClick={() => onEdit(note)}
                             className="absolute top-2 right-2 opacity-60 hover:opacity-100 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
                             style={{color: 'var(--secondary)'}}
-                            title="편집"
+                            title={t('edit')}
                         >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -494,7 +505,7 @@ function NotesList({issues, onEdit}: { issues: Issue[], onEdit: (issue: Issue) =
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
-                        <p>등록된 노트가 없습니다</p>
+                        <p>{t('noNotes')}</p>
                     </div>
                 )}
             </div>
@@ -505,6 +516,7 @@ function NotesList({issues, onEdit}: { issues: Issue[], onEdit: (issue: Issue) =
 // 메인 컴포넌트
 export default function HomePage() {
     const {data: session, status} = useSession();
+    const {t} = useLanguage();
     const [allRepos, setAllRepos] = useState<Repo[]>([]);
     const [selectedRepo, setSelectedRepo] = useState<string>('');
     const [issues, setIssues] = useState<Issue[]>([]);
@@ -585,11 +597,11 @@ export default function HomePage() {
     const handleCreateIssue = async (e: FormEvent) => {
         e.preventDefault();
         if (!newIssueTitle) {
-            alert('제목을 입력해주세요.');
+            alert(t('titleRequired'));
             return;
         }
         if (!selectedRepo) {
-            alert('프로젝트를 선택해주세요.');
+            alert(t('projectRequired'));
             return;
         }
         setIsLoading(true);
@@ -737,7 +749,7 @@ export default function HomePage() {
     const handleUpdateIssue = async (e: FormEvent) => {
         e.preventDefault();
         if (!editingIssue || !editTitle.trim()) {
-            alert('제목을 입력해주세요.');
+            alert(t('titleRequired'));
             return;
         }
 
@@ -827,7 +839,7 @@ export default function HomePage() {
                         <div className="flex items-center gap-6">
                             <h1 className="text-2xl font-bold" style={{color: 'var(--foreground)'}}>Barim</h1>
                             <div className="text-sm" style={{color: 'var(--secondary)'}}>
-                                {session.user?.name}님, 안녕하세요!
+                                {session.user?.name}{t('greeting')}
                             </div>
 
                             {/* Project Selector */}
@@ -838,7 +850,7 @@ export default function HomePage() {
                                     className="select text-sm"
                                     style={{minWidth: '280px'}}
                                 >
-                                    <option value="">-- 프로젝트 선택 --</option>
+                                    <option value="">{t('selectProject')}</option>
                                     {allRepos.map(repo => (
                                         <option key={repo.id} value={repo.name}>{repo.name}</option>
                                     ))}
@@ -847,17 +859,18 @@ export default function HomePage() {
                                 {selectedRepo && (
                                     <div className="text-xs text-center px-2"
                                          style={{color: 'var(--secondary)', width: '100%'}}>
-                                        <div className="text-xs">{tasks.length}개 작업
-                                            / {issues.filter(i => i.labels.some(l => l.name === 'Note')).length}개 노트
+                                        <div className="text-xs">
+                                            {tasks.length}{t('tasksAndNotes', {notes: issues.filter(i => i.labels.some(l => l.name === 'Note')).length})}
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
+                            <LanguageToggle/>
                             <ThemeToggle/>
                             <button onClick={() => signOut()} className="btn btn-secondary">
-                                로그아웃
+                                {t('logout')}
                             </button>
                         </div>
                     </div>
