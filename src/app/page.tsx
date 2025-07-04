@@ -348,9 +348,17 @@ function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
 
       {/* Body text */}
       {issue.body && (
-        <p className="text-xs mb-3 line-clamp-2 leading-relaxed" style={{ color: 'var(--secondary)' }}>
-          {issue.body}
-        </p>
+        <div 
+          className="text-xs mb-3 leading-relaxed max-h-16 overflow-y-auto" 
+          style={{ 
+            color: 'var(--secondary)',
+            whiteSpace: 'pre-line',
+            wordWrap: 'break-word'
+          }}
+          dangerouslySetInnerHTML={{
+            __html: issue.body.replace(/\n/g, '<br/>')
+          }}
+        />
       )}
 
       {/* Action buttons */}
