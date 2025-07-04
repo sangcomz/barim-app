@@ -305,11 +305,6 @@ function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
   const isDone = labels.includes('DONE');
   const isPending = labels.includes('PENDING');
 
-  // 표시할 라벨만 필터링 (상태 라벨만)
-  const statusLabels = issue.labels.filter(label => 
-    ['TODO', 'IN PROGRESS', 'PENDING', 'DONE'].includes(label.name)
-  );
-
   // 상태에 따른 카드 스타일링
   const getCardStyle = () => {
     if (isDone) return 'border-l-green-500 bg-green-50 dark:bg-green-900/10';
@@ -350,32 +345,6 @@ function KanbanCard({ issue, onUpdateState, onDelete, isLoading }: {
           </button>
         )}
       </div>
-
-      {/* Status Labels */}
-      {statusLabels.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          {statusLabels.map(label => {
-            const getStatusColor = (status: string) => {
-              switch(status) {
-                case 'TODO': return 'bg-gray-500';
-                case 'IN PROGRESS': return 'bg-blue-500';
-                case 'PENDING': return 'bg-yellow-500';
-                case 'DONE': return 'bg-green-500';
-                default: return 'bg-gray-500';
-              }
-            };
-
-            return (
-              <span 
-                key={label.name}
-                className={`text-xs px-2 py-1 rounded-full text-white font-medium ${getStatusColor(label.name)}`}
-              >
-                {label.name}
-              </span>
-            );
-          })}
-        </div>
-      )}
 
       {/* Body text */}
       {issue.body && (
@@ -932,7 +901,7 @@ export default function HomePage() {
                           </span>
                         </div>
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-4 gap-3 max-h-80 overflow-y-auto">
                         {pendingTasks.map(task => (
                           <div key={task.id} className="group">
                             <KanbanCard
@@ -944,7 +913,7 @@ export default function HomePage() {
                           </div>
                         ))}
                         {pendingTasks.length === 0 && (
-                          <div className="col-span-full flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
+                          <div className="col-span-4 flex flex-col items-center justify-center text-center py-12 text-xs" style={{ color: 'var(--secondary)' }}>
                             <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
                               <span className="text-lg">⏸️</span>
                             </div>
