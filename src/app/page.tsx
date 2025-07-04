@@ -446,6 +446,7 @@ export default function HomePage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createItemType, setCreateItemType] = useState<'Task' | 'Note'>('Task');
   const [newTags, setNewTags] = useState('');
+  const [pendingReason, setPendingReason] = useState('');
 
   // API 호출 함수들
   const fetchRepos = async () => {
@@ -508,7 +509,6 @@ export default function HomePage() {
       let bodyWithTags = newIssueBody;
       if (createItemType === 'Note' && newTags.trim()) {
         const tags = newTags.split(',').map(tag => tag.trim()).filter(tag => tag);
-        const tagLabels = tags.map(tag => `tag:${tag}`);
         // body에 태그 정보도 추가
         bodyWithTags = newIssueBody + (newIssueBody ? '\n\n' : '') + `Tags: ${tags.join(', ')}`;
       }
@@ -920,7 +920,7 @@ export default function HomePage() {
                     className="input"
                   />
                   <p className="text-xs" style={{ color: 'var(--secondary)' }}>
-                    "tag:태그명" 형태의 라벨로 추가됩니다.
+                    tag:태그명 형태의 라벨로 추가됩니다.
                   </p>
                 </div>
               )}
