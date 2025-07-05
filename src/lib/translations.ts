@@ -47,6 +47,7 @@ export const translations = {
     restart: "재시작",
     edit: "편집",
     delete: "삭제",
+    createNewItem: "새 항목 생성",
     
     // Modals
     createNewItem: "새 항목 생성",
@@ -69,6 +70,8 @@ export const translations = {
     tagsPlaceholder: "태그를 쉼표로 구분하여 입력하세요",
     tagsHelp: "tag:태그명 형태의 라벨로 추가됩니다.",
     pendingReasonPlaceholder: "보류하는 이유를 입력하세요...",
+    createTask: "Task 생성",
+    createNote: "Note 생성",
     
     // Validation
     titleRequired: "제목을 입력해주세요.",
@@ -143,6 +146,7 @@ export const translations = {
     restart: "Restart",
     edit: "Edit",
     delete: "Delete",
+    createNewItem: "Create New Item",
     
     // Modals
     createNewItem: "Create New Item",
@@ -165,6 +169,8 @@ export const translations = {
     tagsPlaceholder: "Enter tags separated by commas",
     tagsHelp: "Will be added as labels in tag:tagname format.",
     pendingReasonPlaceholder: "Enter reason for holding...",
+    createTask: "Create Task",
+    createNote: "Create Note",
     
     // Validation
     titleRequired: "Please enter a title.",

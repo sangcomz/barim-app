@@ -408,28 +408,34 @@ function NotesList({issues, onEdit}: { issues: Issue[], onEdit: (issue: Issue) =
                         backgroundColor: 'var(--card)',
                         borderColor: '#e9d5ff'
                     }}>
-                        {/* Edit button for notes - Always visible */}
-                        <button
-                            onClick={() => onEdit(note)}
-                            className="absolute top-2 right-2 opacity-60 hover:opacity-100 hover:text-blue-500 p-1 transition-all duration-200"
-                            style={{color: 'var(--secondary)'}}
-                            title={t('edit')}
-                        >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                        </button>
+                        <div className="flex justify-between items-start mb-2">
+                            <a
+                                href={note.html_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-medium hover:text-purple-700 flex-1"
+                                style={{color: 'var(--foreground)'}}
+                            >
+                                {note.title}
+                            </a>
+                            {/* Edit button for notes */}
+                            <button
+                                onClick={() => onEdit(note)}
+                                className="opacity-60 hover:opacity-100 hover:text-blue-500 p-1 transition-all duration-200 ml-2 flex-shrink-0"
+                                style={{
+                                    color: 'var(--secondary)',
+                                    border: 'none',
+                                    background: 'transparent'
+                                }}
+                                title={t('edit')}
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </button>
+                        </div>
 
-                        <a
-                            href={note.html_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium hover:text-purple-700 block mb-2 pr-8"
-                            style={{color: 'var(--foreground)'}}
-                        >
-                            {note.title}
-                        </a>
                         {note.body && (
                             <div
                                 className="text-sm line-clamp-2"
@@ -839,7 +845,7 @@ export default function HomePage() {
                                 onClick={() => setIsCreateModalOpen(true)}
                                 className="btn btn-primary flex items-center gap-2"
                             >
-                                새 항목 생성
+                                {t('createNewItem')}
                             </button>
                         </div>
 
@@ -848,7 +854,7 @@ export default function HomePage() {
                                 backgroundColor: '#fef2f2',
                                 border: '1px solid #fecaca'
                             }}>
-                                <p style={{color: '#b91c1c'}}>에러: {error}</p>
+                                <p style={{color: '#b91c1c'}}>{t('error')}: {error}</p>
                             </div>
                         )}
 
@@ -1046,7 +1052,7 @@ export default function HomePage() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="card w-full max-w-md mx-4" style={{maxHeight: '80vh', overflowY: 'auto'}}>
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold">새 항목 생성</h3>
+                            <h3 className="text-lg font-semibold">{t('createNewItem')}</h3>
                             <button
                                 onClick={() => setIsCreateModalOpen(false)}
                                 className="hover:text-red-500 p-1 text-2xl"
@@ -1062,7 +1068,7 @@ export default function HomePage() {
                         <form onSubmit={handleCreateIssue} className="space-y-3">
                             {/* Type Selection */}
                             <div className="space-y-2">
-                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>타입</label>
+                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>{t('type')}</label>
                                 <div className="flex gap-4">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
@@ -1073,7 +1079,7 @@ export default function HomePage() {
                                             onChange={(e) => setCreateItemType(e.target.value as 'Task' | 'Note')}
                                             className="radio"
                                         />
-                                        <span className="text-sm">Task</span>
+                                        <span className="text-sm">{t('task')}</span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input
@@ -1084,19 +1090,19 @@ export default function HomePage() {
                                             onChange={(e) => setCreateItemType(e.target.value as 'Task' | 'Note')}
                                             className="radio"
                                         />
-                                        <span className="text-sm">Note</span>
+                                        <span className="text-sm">{t('note')}</span>
                                     </label>
                                 </div>
                             </div>
 
                             {/* Title */}
                             <div className="space-y-1">
-                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>제목</label>
+                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>{t('title')}</label>
                                 <input
                                     type="text"
                                     value={newIssueTitle}
                                     onChange={(e) => setNewIssueTitle(e.target.value)}
-                                    placeholder="제목을 입력하세요"
+                                    placeholder={t('titlePlaceholder')}
                                     className="input"
                                     required
                                 />
@@ -1104,12 +1110,11 @@ export default function HomePage() {
 
                             {/* Body */}
                             <div className="space-y-1">
-                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>상세
-                                    내용</label>
+                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>{t('content')}</label>
                                 <textarea
                                     value={newIssueBody}
                                     onChange={(e) => setNewIssueBody(e.target.value)}
-                                    placeholder="상세 내용 (선택사항)"
+                                    placeholder={t('contentPlaceholder')}
                                     className="textarea"
                                     rows={3}
                                 />
@@ -1119,16 +1124,16 @@ export default function HomePage() {
                             {createItemType === 'Note' && (
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium"
-                                           style={{color: 'var(--foreground)'}}>태그</label>
+                                           style={{color: 'var(--foreground)'}}>{t('tags')}</label>
                                     <input
                                         type="text"
                                         value={newTags}
                                         onChange={(e) => setNewTags(e.target.value)}
-                                        placeholder="태그를 쉼표로 구분하여 입력하세요"
+                                        placeholder={t('tagsPlaceholder')}
                                         className="input"
                                     />
                                     <p className="text-xs" style={{color: 'var(--secondary)'}}>
-                                        tag:태그명 형태의 라벨로 추가됩니다.
+                                        {t('tagsHelp')}
                                     </p>
                                 </div>
                             )}
@@ -1139,7 +1144,7 @@ export default function HomePage() {
                                     onClick={() => setIsCreateModalOpen(false)}
                                     className="btn btn-secondary text-sm px-3 py-2"
                                 >
-                                    취소
+                                    {t('cancel')}
                                 </button>
                                 <button
                                     type="submit"
@@ -1150,10 +1155,10 @@ export default function HomePage() {
                                         <div className="flex items-center gap-2">
                                             <div
                                                 className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            생성 중...
+                                            {t('creating')}
                                         </div>
                                     ) : (
-                                        `${createItemType} 생성`
+                                        t(createItemType === 'Task' ? 'createTask' : 'createNote')
                                     )}
                                 </button>
                             </div>
@@ -1167,13 +1172,13 @@ export default function HomePage() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="card w-full max-w-md mx-4">
                         <h3 className="text-lg font-semibold mb-4">
-                            {pendingIssue.title} 보류 사유
+                            {pendingIssue.title} {t('pendingReason')}
                         </h3>
                         <form onSubmit={handleConfirmPending}>
               <textarea
                   value={pendingReason}
                   onChange={(e) => setPendingReason(e.target.value)}
-                  placeholder="보류하는 이유를 입력하세요..."
+                  placeholder={t('pendingReasonPlaceholder')}
                   className="textarea mb-4"
                   required
               />
@@ -1183,7 +1188,7 @@ export default function HomePage() {
                                     onClick={() => setIsPendingModalOpen(false)}
                                     className="btn btn-secondary"
                                 >
-                                    취소
+                                    {t('cancel')}
                                 </button>
                                 <button
                                     type="submit"
@@ -1194,10 +1199,10 @@ export default function HomePage() {
                                         <div className="flex items-center gap-2">
                                             <div
                                                 className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            처리 중...
+                                            {t('processing')}
                                         </div>
                                     ) : (
-                                        '확인'
+                                        t('confirm')
                                     )}
                                 </button>
                             </div>
@@ -1211,7 +1216,7 @@ export default function HomePage() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="card w-full max-w-md mx-4" style={{maxHeight: '80vh', overflowY: 'auto'}}>
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold">카드 편집</h3>
+                            <h3 className="text-lg font-semibold">{t('editCard')}</h3>
                             <button
                                 onClick={() => setIsEditModalOpen(false)}
                                 className="hover:text-red-500 p-1 text-2xl"
@@ -1224,12 +1229,12 @@ export default function HomePage() {
                         <form onSubmit={handleUpdateIssue} className="space-y-3">
                             {/* Title */}
                             <div className="space-y-1">
-                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>제목</label>
+                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>{t('title')}</label>
                                 <input
                                     type="text"
                                     value={editTitle}
                                     onChange={(e) => setEditTitle(e.target.value)}
-                                    placeholder="제목을 입력하세요"
+                                    placeholder={t('titlePlaceholder')}
                                     className="input"
                                     required
                                 />
@@ -1237,12 +1242,11 @@ export default function HomePage() {
 
                             {/* Body */}
                             <div className="space-y-1">
-                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>상세
-                                    내용</label>
+                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>{t('content')}</label>
                                 <textarea
                                     value={editBody}
                                     onChange={(e) => setEditBody(e.target.value)}
-                                    placeholder="상세 내용"
+                                    placeholder={t('contentRequired')}
                                     className="textarea"
                                     rows={4}
                                 />
@@ -1254,7 +1258,7 @@ export default function HomePage() {
                                     onClick={() => setIsEditModalOpen(false)}
                                     className="btn btn-secondary text-sm px-3 py-2"
                                 >
-                                    취소
+                                    {t('cancel')}
                                 </button>
                                 <button
                                     type="submit"
@@ -1265,10 +1269,10 @@ export default function HomePage() {
                                         <div className="flex items-center gap-2">
                                             <div
                                                 className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            수정 중...
+                                            {t('updating')}
                                         </div>
                                     ) : (
-                                        '저장'
+                                        t('save')
                                     )}
                                 </button>
                             </div>
