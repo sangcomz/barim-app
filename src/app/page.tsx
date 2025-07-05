@@ -275,19 +275,20 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
 
     // 상태에 따른 카드 스타일링
     const getCardStyle = () => {
-        if (isDone) return 'border-l-green-600 bg-green-50 dark:bg-green-900/10';
-        if (isPending) return 'border-l-orange-500 bg-orange-50 dark:bg-orange-900/10';
-        if (isInProgress) return 'border-l-blue-600 bg-blue-50 dark:bg-blue-900/10';
-        return 'border-l-slate-500 bg-slate-50 dark:bg-slate-900/10';
+        if (isDone) return 'bg-green-50 dark:bg-green-900/10';
+        if (isPending) return 'bg-orange-50 dark:bg-orange-900/10';
+        if (isInProgress) return 'bg-blue-50 dark:bg-blue-900/10';
+        return 'bg-slate-50 dark:bg-slate-900/10';
     };
 
     return (
         <div
-            className={`group relative mb-3 p-4 rounded-xl border-l-4 transition-all duration-200 hover:shadow-lg hover:scale-105 ${getCardStyle()} ${isDone ? 'opacity-75' : ''}`}
+            className={`group relative mb-3 p-4 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-105 ${getCardStyle()} ${isDone ? 'opacity-75' : ''}`}
             style={{
                 background: isDone ? 'var(--card)' : 'var(--card)',
                 border: '1px solid var(--border)',
-                borderLeftWidth: '4px'
+                borderLeftWidth: '8px',
+                borderLeftColor: isDone ? '#22C55E' : isInProgress ? '#3B82F6' : isPending ? '#EAB308' : '#94A3B8',
             }}>
 
             {/* Header with title and action buttons */}
