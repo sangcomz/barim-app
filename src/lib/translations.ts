@@ -49,8 +49,6 @@ export const translations = {
     delete: "삭제",
     createNewItem: "새 항목 생성",
     
-    // Modals
-    createNewItem: "새 항목 생성",
     editCard: "카드 편집",
     pendingReason: "보류 사유",
     cancel: "취소",
@@ -148,8 +146,6 @@ export const translations = {
     delete: "Delete",
     createNewItem: "Create New Item",
     
-    // Modals
-    createNewItem: "Create New Item",
     editCard: "Edit Card",
     pendingReason: "Pending Reason",
     cancel: "Cancel",
