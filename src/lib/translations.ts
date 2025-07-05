@@ -91,6 +91,8 @@ export const translations = {
     // Theme
     lightMode: "라이트 모드로 변경",
     darkMode: "다크 모드로 변경",
+    lightModeShort: "라이트 모드",
+    darkModeShort: "다크 모드",
   },
   
   en: {
@@ -185,6 +187,8 @@ export const translations = {
     // Theme
     lightMode: "Switch to Light Mode",
     darkMode: "Switch to Dark Mode",
+    lightModeShort: "Light Mode",
+    darkModeShort: "Dark Mode",
   }
 };
 
