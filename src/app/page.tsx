@@ -275,10 +275,10 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
 
     // 상태에 따른 카드 스타일링
     const getCardStyle = () => {
-        if (isDone) return 'border-l-green-500 bg-green-50 dark:bg-green-900/10';
-        if (isPending) return 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/10';
-        if (isInProgress) return 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/10';
-        return 'border-l-gray-400 bg-gray-50 dark:bg-gray-900/10';
+        if (isDone) return 'border-l-green-600 bg-green-50 dark:bg-green-900/10';
+        if (isPending) return 'border-l-orange-500 bg-orange-50 dark:bg-orange-900/10';
+        if (isInProgress) return 'border-l-blue-600 bg-blue-50 dark:bg-blue-900/10';
+        return 'border-l-slate-500 bg-slate-50 dark:bg-slate-900/10';
     };
 
     return (
@@ -343,7 +343,7 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
                     {isTodo && (
                         <button
                             onClick={() => onUpdateState(issue, 'IN PROGRESS')}
-                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
+                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-4 rounded-lg font-semibold transition-colors duration-200"
                             disabled={isLoading}
                             style={{border: 'none'}}
                         >
@@ -355,7 +355,7 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
                         <>
                             <button
                                 onClick={() => onUpdateState(issue, 'DONE')}
-                                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
+                                className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-4 py-4 rounded-lg font-semibold transition-colors duration-200"
                                 disabled={isLoading}
                                 style={{border: 'none'}}
                             >
@@ -363,7 +363,7 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
                             </button>
                             <button
                                 onClick={() => onUpdateState(issue, 'PENDING')}
-                                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
+                                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-4 py-4 rounded-lg font-semibold transition-colors duration-200"
                                 disabled={isLoading}
                                 style={{border: 'none'}}
                             >
@@ -374,7 +374,7 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
                     {isPending && (
                         <button
                             onClick={() => onUpdateState(issue, 'IN PROGRESS')}
-                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition-colors duration-200"
+                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-4 py-4 rounded-lg font-semibold transition-colors duration-200"
                             disabled={isLoading}
                             style={{border: 'none'}}
                         >
