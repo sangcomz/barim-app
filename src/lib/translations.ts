@@ -41,10 +41,10 @@ export const translations = {
     noNotes: "등록된 노트가 없습니다",
     
     // Actions
-    start: "🚀 시작",
-    complete: "✅ 완료",
-    hold: "⏸️ 보류",
-    restart: "🔄 재시작",
+    start: "시작",
+    complete: "완료",
+    hold: "보류",
+    restart: "재시작",
     edit: "편집",
     delete: "삭제",
     
@@ -58,8 +58,8 @@ export const translations = {
     
     // Form Fields
     type: "타입",
-    task: "📋 Task",
-    note: "📝 Note",
+    task: "Task",
+    note: "Note",
     title: "제목",
     titlePlaceholder: "제목을 입력하세요",
     content: "상세 내용",
@@ -137,10 +137,10 @@ export const translations = {
     noNotes: "No notes registered",
     
     // Actions
-    start: "🚀 Start",
-    complete: "✅ Complete",
-    hold: "⏸️ Hold",
-    restart: "🔄 Restart",
+    start: "Start",
+    complete: "Complete",
+    hold: "Hold",
+    restart: "Restart",
     edit: "Edit",
     delete: "Delete",
     
@@ -154,8 +154,8 @@ export const translations = {
     
     // Form Fields
     type: "Type",
-    task: "📋 Task",
-    note: "📝 Note",
+    task: "Task",
+    note: "Note",
     title: "Title",
     titlePlaceholder: "Enter title",
     content: "Details",
