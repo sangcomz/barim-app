@@ -486,11 +486,17 @@ function NotesList({issues, onEdit}: { issues: Issue[], onEdit: (issue: Issue) =
 
                             {note.body && (
                                 <div
-                                    className="text-sm line-clamp-2 mb-2"
+                                    className="text-sm mb-2"
                                     style={{
                                         color: 'var(--secondary)',
                                         whiteSpace: 'pre-line',
-                                        wordWrap: 'break-word'
+                                        wordWrap: 'break-word',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 5,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        lineHeight: '1.4em',
+                                        maxHeight: '7em' // 5줄 * 1.4em line-height
                                     }}
                                     dangerouslySetInnerHTML={{
                                         __html: note.body.replace(/\n/g, '<br/>')
