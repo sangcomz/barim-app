@@ -87,33 +87,78 @@ export async function GET(request: Request) {
         // barim-data 레포지토리 존재 확인 및 생성
         await ensureBarimDataRepo(octokit, owner);
 
-        const { data: issues } = await octokit.rest.issues.listForRepo({
-            owner,
-            repo: PHYSICAL_REPO,
-            state: "all",
-            per_page: 100, // 더 많이 가져와서 필터링
-            page: parseInt(page),
-        });
+        const currentPage = parseInt(page);
+        const issuesPerPage = 50; // 한 번에 가져올 이슈 수
+        let allProjectIssues: any[] = [];
+        let githubPage = 1;
+        let totalIssuesFound = 0;
 
-        // 선택한 프로젝트 라벨이 있는 이슈들만 필터링
-        const projectIssues = (issues as GitHubIssue[]).filter(issue => {
-            const hasProjectLabel = issue.labels.some(label => 
-                label.name === projectLabel
-            );
-            const isValidState = issue.state === 'open' || issue.state_reason === 'completed';
-            return hasProjectLabel && isValidState;
-        });
+        // 요청된 페이지까지의 모든 이슈를 가져오기
+        const targetIssueCount = currentPage * issuesPerPage;
 
-        // 페이지네이션 적용 (필터링 후)
-        const startIndex = (parseInt(page) - 1) * 10;
-        const paginatedIssues = projectIssues.slice(startIndex, startIndex + 10);
+        while (allProjectIssues.length < targetIssueCount) {
+            try {
+                const { data: issues } = await octokit.rest.issues.listForRepo({
+                    owner,
+                    repo: PHYSICAL_REPO,
+                    state: "all",
+                    per_page: 100,
+                    page: githubPage,
+                    sort: "updated",
+                    direction: "desc"
+                });
+
+                if (issues.length === 0) break;
+
+                // 프로젝트 라벨이 있는 이슈들만 필터링
+                const pageProjectIssues = issues.filter(issue => {
+                    const hasProjectLabel = issue.labels.some(label => 
+                        label.name === projectLabel
+                    );
+                    
+                    const isValidState = 
+                        issue.state === 'open' || 
+                        (issue.state === 'closed' && issue.state_reason === 'completed');
+                    
+                    return hasProjectLabel && isValidState;
+                });
+
+                allProjectIssues = allProjectIssues.concat(pageProjectIssues);
+                githubPage++;
+                
+                // 더 이상 이슈가 없으면 중단
+                if (issues.length < 100) break;
+                
+                // 안전장치: 너무 많은 페이지를 가져오지 않도록 제한
+                if (githubPage > 20) break;
+            } catch (error) {
+                console.error(`Error fetching GitHub page ${githubPage}:`, error);
+                break;
+            }
+        }
+
+        // 현재 페이지에 해당하는 이슈들만 반환
+        const startIndex = (currentPage - 1) * issuesPerPage;
+        const endIndex = startIndex + issuesPerPage;
+        const paginatedIssues = allProjectIssues.slice(startIndex, endIndex);
+        
+        // 다음 페이지가 있는지 확인
+        const hasNextPage = allProjectIssues.length > endIndex;
+        
+        // 아직 더 GitHub 페이지가 있을 가능성이 있는지 확인
+        const mayHaveMorePages = (githubPage <= 20) && (allProjectIssues.length === targetIssueCount);
+
+        console.log(`Page ${currentPage}: Returning ${paginatedIssues.length} issues, hasNextPage: ${hasNextPage || mayHaveMorePages}`);
 
         return NextResponse.json({
             issues: paginatedIssues,
             meta: {
                 authSource: auth.fromSession ? "session" : "header",
-                totalCount: projectIssues.length,
-                page: parseInt(page),
+                currentPage: currentPage,
+                issuesPerPage,
+                returnedCount: paginatedIssues.length,
+                hasNextPage: hasNextPage || mayHaveMorePages,
+                totalLoadedIssues: allProjectIssues.length,
                 projectLabel,
                 physicalRepo: PHYSICAL_REPO,
                 owner

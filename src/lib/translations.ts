@@ -79,6 +79,8 @@ export const translations = {
     creating: "생성 중...",
     updating: "수정 중...",
     processing: "처리 중...",
+    loading: "로딩",
+    loadMore: "더 보기",
     
     // Errors
     error: "에러",
@@ -176,6 +178,8 @@ export const translations = {
     creating: "Creating...",
     updating: "Updating...",
     processing: "Processing...",
+    loading: "Loading",
+    loadMore: "Load More",
     
     // Errors
     error: "Error",

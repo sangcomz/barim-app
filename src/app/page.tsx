@@ -215,6 +215,31 @@ function LandingPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* 더 보기 버튼 */}
+                {hasNextPage && (
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={handleLoadMore}
+                            disabled={isLoadingMore}
+                            className={`btn btn-secondary ${isLoadingMore ? 'opacity-75 cursor-not-allowed' : ''}`}
+                        >
+                            {isLoadingMore ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                    {t('loading')}...
+                                </div>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                    {t('loadMore')}
+                                </>
+                            )}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Footer */}
@@ -258,6 +283,31 @@ function LandingPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* 더 보기 버튼 */}
+                {hasNextPage && (
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={handleLoadMore}
+                            disabled={isLoadingMore}
+                            className={`btn btn-secondary ${isLoadingMore ? 'opacity-75 cursor-not-allowed' : ''}`}
+                        >
+                            {isLoadingMore ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                    {t('loading')}...
+                                </div>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                    {t('loadMore')}
+                                </>
+                            )}
+                        </button>
+                    </div>
+                )}
             </footer>
         </div>
     );
@@ -531,7 +581,9 @@ export default function HomePage() {
     const [allRepos, setAllRepos] = useState<Repo[]>([]);
     const [selectedRepo, setSelectedRepo] = useState<string>('');
     const [issues, setIssues] = useState<Issue[]>([]);
-    const [page, setPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [newIssueTitle, setNewIssueTitle] = useState('');
@@ -575,17 +627,23 @@ export default function HomePage() {
         }
     };
 
-    const fetchIssues = useCallback(async (projectName: string, pageNum?: number) => {
+    const fetchIssues = useCallback(async (projectName: string, pageNum?: number, appendMode: boolean = false) => {
         if (!projectName) return;
-        setIsLoading(true);
+        
+        if (appendMode) {
+            setIsLoadingMore(true);
+        } else {
+            setIsLoading(true);
+        }
+        
         setError(null);
 
-        const currentPage = pageNum !== undefined ? pageNum : page;
+        const targetPage = pageNum !== undefined ? pageNum : (appendMode ? currentPage + 1 : 1);
 
         try {
             // 캐시 무효화를 위한 타임스탬프 추가
             const timestamp = new Date().getTime();
-            const response = await fetch(`/api/issues?repo=${projectName}&page=${currentPage}&_t=${timestamp}`, {
+            const response = await fetch(`/api/issues?repo=${projectName}&page=${targetPage}&_t=${timestamp}`, {
                 cache: 'no-store',
                 headers: {
                     'Cache-Control': 'no-cache',
@@ -593,17 +651,37 @@ export default function HomePage() {
             });
             if (!response.ok) throw new Error('Failed to fetch issues.');
             const data = await response.json();
-            setIssues(data.issues || data);
+            
+            const newIssues = data.issues || data;
+            
+            if (appendMode) {
+                // 기존 이슈에 새 이슈들 추가
+                setIssues(prevIssues => [...prevIssues, ...newIssues]);
+                setCurrentPage(targetPage);
+            } else {
+                // 기존 이슈들 교체
+                setIssues(newIssues);
+                setCurrentPage(targetPage);
+            }
+            
+            // 다음 페이지 존재 여부 설정
+            setHasNextPage(data.meta?.hasNextPage || false);
 
-            // 선택된 레포를 로컬스토리지에 저장
-            localStorage.setItem('lastSelectedRepo', projectName);
+            // 선택된 레포를 로컬스토리지에 저장 (새로운 프로젝트 선택시에만)
+            if (!appendMode) {
+                localStorage.setItem('lastSelectedRepo', projectName);
+            }
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
             setError(errorMessage);
         } finally {
-            setIsLoading(false);
+            if (appendMode) {
+                setIsLoadingMore(false);
+            } else {
+                setIsLoading(false);
+            }
         }
-    }, [page]);
+    }, [currentPage]);
 
     const handleCreateIssue = async (e: FormEvent) => {
         e.preventDefault();
@@ -644,22 +722,21 @@ export default function HomePage() {
             setNewTags('');
             setIsCreateModalOpen(false);
 
-            console.log('새 항목 생성 완료, 리프레시 시작...');
-
             // 강제 리렌더링 트리거
             setRefreshTrigger(prev => prev + 1);
 
             // 강제 리프레시 - 여러 단계로 확실하게 처리
-            setPage(1);
+            setCurrentPage(1);
+            setHasNextPage(false);
 
             // 즉시 한 번 호출
             console.log('첫 번째 fetchIssues 호출...');
-            await fetchIssues(selectedRepo, 1);
+            await fetchIssues(selectedRepo, 1, false);
 
             // 추가 보장을 위해 약간의 지연 후 다시 호출
             setTimeout(async () => {
                 console.log('두 번째 fetchIssues 호출...');
-                await fetchIssues(selectedRepo, 1);
+                await fetchIssues(selectedRepo, 1, false);
                 setRefreshTrigger(prev => prev + 1);
             }, 1000);
         } catch (err) {
@@ -701,7 +778,7 @@ export default function HomePage() {
             });
             if (!response.ok) throw new Error('Failed to update issue state.');
 
-            await fetchIssues(selectedRepo);
+            await fetchIssues(selectedRepo, 1, false);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
             setError(errorMessage);
@@ -741,7 +818,7 @@ export default function HomePage() {
             setIsPendingModalOpen(false);
             setPendingReason('');
             setPendingIssue(null);
-            await fetchIssues(selectedRepo);
+            await fetchIssues(selectedRepo, 1, false);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
             setError(errorMessage);
@@ -785,12 +862,20 @@ export default function HomePage() {
 
             // 강제 리프레시
             setRefreshTrigger(prev => prev + 1);
-            await fetchIssues(selectedRepo, 1);
+            setCurrentPage(1);
+            setHasNextPage(false);
+            await fetchIssues(selectedRepo, 1, false);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
             setError(errorMessage);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleLoadMore = () => {
+        if (selectedRepo && hasNextPage && !isLoadingMore) {
+            fetchIssues(selectedRepo, undefined, true);
         }
     };
 
@@ -800,22 +885,23 @@ export default function HomePage() {
 
     useEffect(() => {
         if (selectedRepo) {
-            setPage(1);
-            fetchIssues(selectedRepo);
+            setCurrentPage(1);
+            setHasNextPage(false);
+            fetchIssues(selectedRepo, 1, false);
         } else {
             setIssues([]);
+            setCurrentPage(1);
+            setHasNextPage(false);
         }
     }, [selectedRepo, fetchIssues]);
-
-    useEffect(() => {
-        if (selectedRepo) fetchIssues(selectedRepo);
-    }, [page, selectedRepo, fetchIssues]);
 
     // 강제 리프레시 트리거
     useEffect(() => {
         if (selectedRepo && refreshTrigger > 0) {
             console.log('강제 리프레시 트리거 발동:', refreshTrigger);
-            fetchIssues(selectedRepo, 1);
+            setCurrentPage(1);
+            setHasNextPage(false);
+            fetchIssues(selectedRepo, 1, false);
         }
     }, [refreshTrigger, selectedRepo, fetchIssues]);
 
@@ -882,6 +968,31 @@ export default function HomePage() {
                         </div>
                     </div>
                 </div>
+
+                {/* 더 보기 버튼 */}
+                {hasNextPage && (
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={handleLoadMore}
+                            disabled={isLoadingMore}
+                            className={`btn btn-secondary ${isLoadingMore ? 'opacity-75 cursor-not-allowed' : ''}`}
+                        >
+                            {isLoadingMore ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                    {t('loading')}...
+                                </div>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                    {t('loadMore')}
+                                </>
+                            )}
+                        </button>
+                    </div>
+                )}
             </header>
 
             {/* Loading Progress Bar */}
