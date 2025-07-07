@@ -29,6 +29,14 @@ interface Project {
     issueCount: number;
 }
 
+interface Repository {
+    id: number;
+    name: string;
+    full_name: string;
+    description?: string | null;
+    updated_at: string;
+}
+
 interface UpdatePayload {
     repo: string;
     labels?: string[];
@@ -549,6 +557,14 @@ export default function HomePage() {
     const [pendingReason, setPendingReason] = useState('');
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+    // Add Project modal states
+    const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
+    const [availableRepos, setAvailableRepos] = useState<Repository[]>([]);
+    const [selectedRepoForProject, setSelectedRepoForProject] = useState<string>('');
+    const [customProjectName, setCustomProjectName] = useState('');
+    const [projectDescription, setProjectDescription] = useState('');
+    const [addProjectMode, setAddProjectMode] = useState<'repo' | 'custom'>('repo');
+
     // Edit modal states
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
@@ -577,6 +593,70 @@ export default function HomePage() {
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
             setError(errorMessage);
+        }
+    };
+
+    const fetchAvailableRepos = async () => {
+        try {
+            const response = await fetch('/api/projects');
+            if (!response.ok) throw new Error('Failed to fetch repositories.');
+            const data = await response.json();
+            setAvailableRepos(data.repositories || []);
+        } catch (err) {
+            console.error('Error fetching repositories:', err);
+            setAvailableRepos([]);
+        }
+    };
+
+    const handleAddProject = async (e: FormEvent) => {
+        e.preventDefault();
+        
+        let projectName = '';
+        if (addProjectMode === 'repo' && selectedRepoForProject) {
+            projectName = selectedRepoForProject;
+        } else if (addProjectMode === 'custom' && customProjectName.trim()) {
+            projectName = customProjectName.trim();
+        }
+
+        if (!projectName) {
+            alert(t('projectNameRequired'));
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/projects', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    projectName,
+                    description: projectDescription.trim() || undefined,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create project.');
+            }
+
+            // 모달 닫기 및 상태 초기화
+            setIsAddProjectModalOpen(false);
+            setSelectedRepoForProject('');
+            setCustomProjectName('');
+            setProjectDescription('');
+            setAddProjectMode('repo');
+
+            // 프로젝트 목록 새로고침
+            await fetchProjects();
+            
+            // 새로 추가된 프로젝트 자동 선택
+            setSelectedProject(projectName);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+            setError(errorMessage);
+            alert(errorMessage);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -919,6 +999,20 @@ export default function HomePage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
+                            {/* Add Project Button */}
+                            <button
+                                onClick={() => {
+                                    setIsAddProjectModalOpen(true);
+                                    fetchAvailableRepos();
+                                }}
+                                className="btn btn-secondary text-sm flex items-center gap-2"
+                                title={t('addProject')}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
+                                </svg>
+                                {t('addProject')}
+                            </button>
                             <SettingsDropdown/>
                         </div>
                     </div>
@@ -1397,6 +1491,134 @@ export default function HomePage() {
                                         </div>
                                     ) : (
                                         t('save')
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Project Modal */}
+            {isAddProjectModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="card w-full max-w-md mx-4" style={{maxHeight: '80vh', overflowY: 'auto'}}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold">{t('addProject')}</h3>
+                            <button
+                                onClick={() => setIsAddProjectModalOpen(false)}
+                                className="hover:text-red-500 p-1 text-2xl"
+                                style={{color: 'var(--secondary)', border: 'none', background: 'transparent'}}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleAddProject} className="space-y-4">
+                            {/* Mode Selection */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>{t('projectSource')}</label>
+                                <div className="flex gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="addProjectMode"
+                                            value="repo"
+                                            checked={addProjectMode === 'repo'}
+                                            onChange={(e) => setAddProjectMode(e.target.value as 'repo' | 'custom')}
+                                            className="radio"
+                                        />
+                                        <span className="text-sm">{t('fromRepository')}</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="addProjectMode"
+                                            value="custom"
+                                            checked={addProjectMode === 'custom'}
+                                            onChange={(e) => setAddProjectMode(e.target.value as 'repo' | 'custom')}
+                                            className="radio"
+                                        />
+                                        <span className="text-sm">{t('customName')}</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Repository Selection */}
+                            {addProjectMode === 'repo' && (
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>{t('selectRepository')}</label>
+                                    <select
+                                        value={selectedRepoForProject}
+                                        onChange={(e) => setSelectedRepoForProject(e.target.value)}
+                                        className="select"
+                                        required={addProjectMode === 'repo'}
+                                    >
+                                        <option value="">{t('selectRepository')}</option>
+                                        {availableRepos.map(repo => (
+                                            <option key={repo.id} value={repo.name}>
+                                                {repo.name}
+                                                {repo.description && ` - ${repo.description.substring(0, 50)}${repo.description.length > 50 ? '...' : ''}`}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-xs" style={{color: 'var(--secondary)'}}>
+                                        {t('repositoryHelp')}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Custom Project Name */}
+                            {addProjectMode === 'custom' && (
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>{t('projectName')}</label>
+                                    <input
+                                        type="text"
+                                        value={customProjectName}
+                                        onChange={(e) => setCustomProjectName(e.target.value)}
+                                        placeholder={t('projectNamePlaceholder')}
+                                        className="input"
+                                        required={addProjectMode === 'custom'}
+                                    />
+                                    <p className="text-xs" style={{color: 'var(--secondary)'}}>
+                                        {t('projectNameHelp')}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Description */}
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium" style={{color: 'var(--foreground)'}}>{t('description')} ({t('optional')})</label>
+                                <textarea
+                                    value={projectDescription}
+                                    onChange={(e) => setProjectDescription(e.target.value)}
+                                    placeholder={t('projectDescriptionPlaceholder')}
+                                    className="textarea"
+                                    rows={2}
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAddProjectModalOpen(false)}
+                                    className="btn btn-secondary text-sm px-3 py-2"
+                                >
+                                    {t('cancel')}
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className={`btn btn-primary text-sm px-3 py-2 ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
+                                >
+                                    {isLoading ? (
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            {t('creating')}
+                                        </div>
+                                    ) : (
+                                        t('addProject')
                                     )}
                                 </button>
                             </div>

@@ -48,6 +48,7 @@ export const translations = {
     edit: "편집",
     delete: "삭제",
     createNewItem: "새 항목 생성",
+    addProject: "프로젝트 추가",
     
     editCard: "카드 편집",
     pendingReason: "보류 사유",
@@ -74,6 +75,20 @@ export const translations = {
     // Validation
     titleRequired: "제목을 입력해주세요.",
     projectRequired: "프로젝트를 선택해주세요.",
+    projectNameRequired: "프로젝트 이름을 입력해주세요.",
+    
+    // Project Management
+    projectSource: "프로젝트 생성 방법",
+    fromRepository: "레포지토리에서",
+    customName: "직접 입력",
+    selectRepository: "레포지토리 선택",
+    repositoryHelp: "기존 레포지토리 이름을 프로젝트로 사용합니다.",
+    projectName: "프로젝트 이름",
+    projectNamePlaceholder: "프로젝트 이름을 입력하세요",
+    projectNameHelp: "영문, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능합니다.",
+    description: "설명",
+    optional: "선택사항",
+    projectDescriptionPlaceholder: "프로젝트 설명을 입력하세요",
     
     // Loading States
     creating: "생성 중...",
@@ -147,6 +162,7 @@ export const translations = {
     edit: "Edit",
     delete: "Delete",
     createNewItem: "Create New Item",
+    addProject: "Add Project",
     
     editCard: "Edit Card",
     pendingReason: "Pending Reason",
@@ -173,6 +189,20 @@ export const translations = {
     // Validation
     titleRequired: "Please enter a title.",
     projectRequired: "Please select a project.",
+    projectNameRequired: "Please enter a project name.",
+    
+    // Project Management
+    projectSource: "Project Creation Method",
+    fromRepository: "From Repository",
+    customName: "Custom Name",
+    selectRepository: "Select Repository",
+    repositoryHelp: "Use existing repository name as project name.",
+    projectName: "Project Name",
+    projectNamePlaceholder: "Enter project name",
+    projectNameHelp: "Only letters, numbers, hyphens(-), and underscores(_) are allowed.",
+    description: "Description",
+    optional: "optional",
+    projectDescriptionPlaceholder: "Enter project description",
     
     // Loading States
     creating: "Creating...",
