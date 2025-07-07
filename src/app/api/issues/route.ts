@@ -111,8 +111,9 @@ export async function GET(request: Request) {
 
                 // 프로젝트 라벨이 있는 이슈들만 필터링
                 const pageProjectIssues = (issues as APIIssue[]).filter(issue => {
+                    const projectLabelName = `project:${projectLabel}`;
                     const hasProjectLabel = issue.labels.some(label => 
-                        label.name === projectLabel
+                        label.name === projectLabelName
                     );
                     
                     const isValidState = 
@@ -210,9 +211,12 @@ export async function POST(request: Request) {
         
         const existingLabelNames = existingLabels.map(label => label.name);
 
+        // 프로젝트 라벨 이름 (project: 접두사 추가)
+        const projectLabelName = `project:${projectLabel}`;
+
         // 필요한 라벨들 정의 (선택한 프로젝트 라벨 포함)
         const labelsToEnsure = [
-            { name: projectLabel, color: getRandomColor(), description: `Issues from ${projectLabel} project` },
+            { name: projectLabelName, color: getRandomColor(), description: `Issues from ${projectLabel} project` },
             { name: 'Note', color: 'fbca04', description: 'Simple note' },
             { name: 'Task', color: '0075ca', description: 'A task that needs to be done' },
             { name: 'TODO', color: 'd876e3', description: 'Task to be done' },
@@ -252,7 +256,7 @@ export async function POST(request: Request) {
         }
 
         // 이슈에 추가할 라벨 목록 구성
-        const labelsToAdd = [projectLabel]; // 선택한 프로젝트 라벨 추가
+        const labelsToAdd = [projectLabelName]; // 선택한 프로젝트 라벨 추가 (project: 접두사 포함)
         if (issueType === 'Task') {
             labelsToAdd.push('Task', 'TODO');
         } else if (issueType === 'Note') {

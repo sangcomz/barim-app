@@ -21,9 +21,12 @@ interface Issue {
     labels: Label[];
 }
 
-interface Repo {
-    id: number;
+interface Project {
     name: string;
+    label: string;
+    color: string;
+    description?: string;
+    issueCount: number;
 }
 
 interface UpdatePayload {
@@ -528,8 +531,8 @@ function NotesList({issues, onEdit}: { issues: Issue[], onEdit: (issue: Issue) =
 export default function HomePage() {
     const {data: session, status} = useSession();
     const {t} = useLanguage();
-    const [allRepos, setAllRepos] = useState<Repo[]>([]);
-    const [selectedRepo, setSelectedRepo] = useState<string>('');
+    const [allProjects, setAllProjects] = useState<Project[]>([]);
+    const [selectedProject, setSelectedProject] = useState<string>('');
     const [issues, setIssues] = useState<Issue[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [hasNextPage, setHasNextPage] = useState(false);
@@ -553,23 +556,23 @@ export default function HomePage() {
     const [editBody, setEditBody] = useState('');
 
     // API 호출 함수들
-    const fetchRepos = async () => {
+    const fetchProjects = async () => {
         try {
             const response = await fetch('/api/repos');
-            if (!response.ok) throw new Error('Failed to fetch repositories.');
+            if (!response.ok) throw new Error('Failed to fetch projects.');
             const data = await response.json();
-            const repos = data.repos || data;
-            setAllRepos(repos);
+            const projects = data.projects || [];
+            setAllProjects(projects);
 
-            // 마지막 선택된 레포를 로컬스토리지에서 확인
-            const lastRepo = localStorage.getItem('lastSelectedRepo');
+            // 마지막 선택된 프로젝트를 로컬스토리지에서 확인
+            const lastProject = localStorage.getItem('lastSelectedProject');
 
-            if (lastRepo && repos.some((repo: Repo) => repo.name === lastRepo)) {
-                // 로컬스토리지에 저장된 레포가 있으면 사용
-                setSelectedRepo(lastRepo);
-            } else if (repos.length > 0) {
-                // 없으면 가장 최근 업데이트된 레포를 자동 선택 (이미 정렬되어 있음)
-                setSelectedRepo(repos[0].name);
+            if (lastProject && projects.some((project: Project) => project.name === lastProject)) {
+                // 로컬스토리지에 저장된 프로젝트가 있으면 사용
+                setSelectedProject(lastProject);
+            } else if (projects.length > 0) {
+                // 없으면 첫 번째 프로젝트를 자동 선택
+                setSelectedProject(projects[0].name);
             }
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -639,7 +642,7 @@ export default function HomePage() {
             alert(t('titleRequired'));
             return;
         }
-        if (!selectedRepo) {
+        if (!selectedProject) {
             alert(t('projectRequired'));
             return;
         }
@@ -659,7 +662,7 @@ export default function HomePage() {
                 body: JSON.stringify({
                     title: newIssueTitle,
                     body: bodyWithTags,
-                    repo: selectedRepo,
+                    repo: selectedProject,
                     issueType: createItemType,
                     tags: createItemType === 'Note' && newTags.trim() ?
                         newTags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
@@ -681,12 +684,12 @@ export default function HomePage() {
 
             // 즉시 한 번 호출
             console.log('첫 번째 fetchIssues 호출...');
-            await fetchIssues(selectedRepo, 1, false);
+            await fetchIssues(selectedProject, 1, false);
 
             // 추가 보장을 위해 약간의 지연 후 다시 호출
             setTimeout(async () => {
                 console.log('두 번째 fetchIssues 호출...');
-                await fetchIssues(selectedRepo, 1, false);
+                await fetchIssues(selectedProject, 1, false);
                 setRefreshTrigger(prev => prev + 1);
             }, 1000);
         } catch (err) {
@@ -728,7 +731,7 @@ export default function HomePage() {
             });
             if (!response.ok) throw new Error('Failed to update issue state.');
 
-            await fetchIssues(selectedRepo, 1, false);
+            await fetchIssues(selectedProject, 1, false);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
             setError(errorMessage);
@@ -768,7 +771,7 @@ export default function HomePage() {
             setIsPendingModalOpen(false);
             setPendingReason('');
             setPendingIssue(null);
-            await fetchIssues(selectedRepo, 1, false);
+            await fetchIssues(selectedProject, 1, false);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
             setError(errorMessage);
@@ -814,7 +817,7 @@ export default function HomePage() {
             setRefreshTrigger(prev => prev + 1);
             setCurrentPage(1);
             setHasNextPage(false);
-            await fetchIssues(selectedRepo, 1, false);
+            await fetchIssues(selectedProject, 1, false);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
             setError(errorMessage);
@@ -824,36 +827,36 @@ export default function HomePage() {
     };
 
     const handleLoadMore = () => {
-        if (selectedRepo && hasNextPage && !isLoadingMore) {
-            fetchIssues(selectedRepo, undefined, true);
+        if (selectedProject && hasNextPage && !isLoadingMore) {
+            fetchIssues(selectedProject, undefined, true);
         }
     };
 
     useEffect(() => {
-        if (status === 'authenticated') fetchRepos();
+        if (status === 'authenticated') fetchProjects();
     }, [status]);
 
     useEffect(() => {
-        if (selectedRepo) {
+        if (selectedProject) {
             setCurrentPage(1);
             setHasNextPage(false);
-            fetchIssues(selectedRepo, 1, false);
+            fetchIssues(selectedProject, 1, false);
         } else {
             setIssues([]);
             setCurrentPage(1);
             setHasNextPage(false);
         }
-    }, [selectedRepo, fetchIssues]);
+    }, [selectedProject, fetchIssues]);
 
     // 강제 리프레시 트리거
     useEffect(() => {
-        if (selectedRepo && refreshTrigger > 0) {
+        if (selectedProject && refreshTrigger > 0) {
             console.log('강제 리프레시 트리거 발동:', refreshTrigger);
             setCurrentPage(1);
             setHasNextPage(false);
-            fetchIssues(selectedRepo, 1, false);
+            fetchIssues(selectedProject, 1, false);
         }
-    }, [refreshTrigger, selectedRepo, fetchIssues]);
+    }, [refreshTrigger, selectedProject, fetchIssues]);
 
     if (status === "loading") {
         return (
@@ -892,18 +895,20 @@ export default function HomePage() {
                             {/* Project Selector */}
                             <div className="flex items-center gap-2">
                                 <select
-                                    value={selectedRepo}
-                                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedRepo(e.target.value)}
+                                    value={selectedProject}
+                                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedProject(e.target.value)}
                                     className="select text-sm"
                                     style={{minWidth: '280px'}}
                                 >
                                     <option value="">{t('selectProject')}</option>
-                                    {allRepos.map(repo => (
-                                        <option key={repo.id} value={repo.name}>{repo.name}</option>
+                                    {allProjects.map(project => (
+                                        <option key={project.name} value={project.name}>
+                                            {project.name} ({project.issueCount})
+                                        </option>
                                     ))}
                                 </select>
 
-                                {selectedRepo && (
+                                {selectedProject && (
                                     <div className="text-xs text-center px-2"
                                          style={{color: 'var(--secondary)', width: '100%'}}>
                                         <div className="text-xs">
@@ -931,7 +936,7 @@ export default function HomePage() {
             )}
 
             <div className="container mx-auto py-6">
-                {selectedRepo && (
+                {selectedProject && (
                     <>
                         {/* Create New Item Button */}
                         <div className="mb-6">
@@ -1141,7 +1146,7 @@ export default function HomePage() {
                 )}
 
                 {/* 더 보기 버튼 */}
-                {selectedRepo && hasNextPage && (
+                {selectedProject && hasNextPage && (
                     <div className="mt-6 text-center">
                         <button
                             onClick={handleLoadMore}
