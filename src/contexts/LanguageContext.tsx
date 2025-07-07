@@ -33,7 +33,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
         setLanguage(browserLanguage);
         localStorage.setItem('language', browserLanguage);
       }
-    } catch (error) {
+    } catch {
       // localStorage가 없는 환경에서는 기본값 사용
       console.warn('localStorage not available, using default language');
     }
@@ -44,7 +44,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     if (mounted) {
       try {
         localStorage.setItem('language', lang);
-      } catch (error) {
+      } catch {
         console.warn('Could not save language to localStorage');
       }
     }

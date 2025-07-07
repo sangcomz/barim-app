@@ -16,8 +16,8 @@ interface GitHubLabel {
     description?: string;
 }
 
-// GitHub 이슈 타입 정의
-interface GitHubIssue {
+// GitHub 이슈 타입 정의 (사용되지 않으므로 제거하거나 interface로 변경)
+interface APIIssue {
     id: number;
     number: number;
     title: string;
@@ -89,9 +89,8 @@ export async function GET(request: Request) {
 
         const currentPage = parseInt(page);
         const issuesPerPage = 50; // 한 번에 가져올 이슈 수
-        let allProjectIssues: any[] = [];
+        let allProjectIssues: APIIssue[] = [];
         let githubPage = 1;
-        let totalIssuesFound = 0;
 
         // 요청된 페이지까지의 모든 이슈를 가져오기
         const targetIssueCount = currentPage * issuesPerPage;
@@ -111,7 +110,7 @@ export async function GET(request: Request) {
                 if (issues.length === 0) break;
 
                 // 프로젝트 라벨이 있는 이슈들만 필터링
-                const pageProjectIssues = issues.filter(issue => {
+                const pageProjectIssues = (issues as APIIssue[]).filter(issue => {
                     const hasProjectLabel = issue.labels.some(label => 
                         label.name === projectLabel
                     );
