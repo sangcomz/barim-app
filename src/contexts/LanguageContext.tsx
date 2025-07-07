@@ -16,23 +16,38 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [language, setLanguage] = useState<Language>('ko');
+  const [language, setLanguage] = useState<Language>('ko'); // 기본값을 ko로 설정
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // 로컬스토리지에서 언어 설정 불러오기
-    const savedLanguage = localStorage.getItem('language') as Language;
-    if (savedLanguage && (savedLanguage === 'ko' || savedLanguage === 'en')) {
-      setLanguage(savedLanguage);
-    } else {
-      // 브라우저 언어 감지
-      const browserLanguage = navigator.language.startsWith('ko') ? 'ko' : 'en';
-      setLanguage(browserLanguage);
+    setMounted(true);
+    
+    // 클라이언트에서만 실행
+    try {
+      const savedLanguage = localStorage.getItem('language') as Language;
+      if (savedLanguage && (savedLanguage === 'ko' || savedLanguage === 'en')) {
+        setLanguage(savedLanguage);
+      } else {
+        // 브라우저 언어 감지
+        const browserLanguage = navigator.language.startsWith('ko') ? 'ko' : 'en';
+        setLanguage(browserLanguage);
+        localStorage.setItem('language', browserLanguage);
+      }
+    } catch (error) {
+      // localStorage가 없는 환경에서는 기본값 사용
+      console.warn('localStorage not available, using default language');
     }
   }, []);
 
   const changeLanguage = (lang: Language) => {
     setLanguage(lang);
-    localStorage.setItem('language', lang);
+    if (mounted) {
+      try {
+        localStorage.setItem('language', lang);
+      } catch (error) {
+        console.warn('Could not save language to localStorage');
+      }
+    }
   };
 
   const t = (key: TranslationKey, params?: Record<string, string | number>): string => {

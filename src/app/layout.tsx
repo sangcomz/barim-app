@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { NextAuthProvider } from "./providers"; // <--- 추가
+import { NextAuthProvider } from "./providers";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,10 +18,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+      <ThemeProvider />
       <LanguageProvider>
-        <NextAuthProvider>{children}</NextAuthProvider> {/* <--- 수정 */}
+        <NextAuthProvider>{children}</NextAuthProvider>
       </LanguageProvider>
       </body>
       </html>
