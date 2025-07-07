@@ -278,6 +278,11 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
     const isDone = labels.includes('DONE');
     const isPending = labels.includes('PENDING');
 
+    // tag: 접두사가 있는 라벨들을 추출하고 정리
+    const tagLabels = labels
+        .filter(label => label.startsWith('tag:'))
+        .map(label => label.replace('tag:', ''));
+
     // 상태에 따른 카드 스타일링
     const getCardStyle = () => {
         if (isDone) return 'bg-green-50 dark:bg-green-900/10';
@@ -341,6 +346,26 @@ function KanbanCard({issue, onUpdateState, onEdit, isLoading}: {
                         __html: issue.body.replace(/\n/g, '<br/>')
                     }}
                 />
+            )}
+
+            {/* Tags Display */}
+            {tagLabels.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                    {tagLabels.map((tag, index) => (
+                        <span
+                            key={index}
+                            className="inline-block px-3 py-1.5 text-xs rounded-full"
+                            style={{
+                                backgroundColor: 'var(--primary)',
+                                color: 'white',
+                                fontSize: '0.65rem',
+                                fontWeight: '500'
+                            }}
+                        >
+                            {tag}
+                        </span>
+                    ))}
+                </div>
             )}
 
             {/* Action buttons */}
@@ -408,54 +433,82 @@ function NotesList({issues, onEdit}: { issues: Issue[], onEdit: (issue: Issue) =
                 {t('notes')} ({notes.length})
             </h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
-                {notes.map(note => (
-                    <div key={note.id} className="group card border-purple-200 rounded-lg p-3 relative" style={{
-                        backgroundColor: 'var(--card)',
-                        borderColor: '#e9d5ff'
-                    }}>
-                        <div className="flex justify-between items-start mb-2">
-                            <a
-                                href={note.html_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-medium hover:text-purple-700 flex-1"
-                                style={{color: 'var(--foreground)'}}
-                            >
-                                {note.title}
-                            </a>
-                            {/* Edit button for notes */}
-                            <button
-                                onClick={() => onEdit(note)}
-                                className="opacity-60 hover:opacity-100 hover:text-blue-500 p-1 transition-all duration-200 ml-2 flex-shrink-0"
-                                style={{
-                                    color: 'var(--secondary)',
-                                    border: 'none',
-                                    background: 'transparent'
-                                }}
-                                title={t('edit')}
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                            </button>
-                        </div>
+                {notes.map(note => {
+                    // tag: 접두사가 있는 라벨들을 추출하고 정리
+                    const tagLabels = note.labels
+                        .map(l => l.name)
+                        .filter(label => label.startsWith('tag:'))
+                        .map(label => label.replace('tag:', ''));
 
-                        {note.body && (
-                            <div
-                                className="text-sm line-clamp-2"
-                                style={{
-                                    color: 'var(--secondary)',
-                                    whiteSpace: 'pre-line',
-                                    wordWrap: 'break-word'
-                                }}
-                                dangerouslySetInnerHTML={{
-                                    __html: note.body.replace(/\n/g, '<br/>')
-                                }}
-                            />
-                        )}
-                    </div>
-                ))}
+                    return (
+                        <div key={note.id} className="group card border-purple-200 rounded-lg p-3 relative" style={{
+                            backgroundColor: 'var(--card)',
+                            borderColor: '#e9d5ff'
+                        }}>
+                            <div className="flex justify-between items-start mb-2">
+                                <a
+                                    href={note.html_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-medium hover:text-purple-700 flex-1"
+                                    style={{color: 'var(--foreground)'}}
+                                >
+                                    {note.title}
+                                </a>
+                                {/* Edit button for notes */}
+                                <button
+                                    onClick={() => onEdit(note)}
+                                    className="opacity-60 hover:opacity-100 hover:text-blue-500 p-1 transition-all duration-200 ml-2 flex-shrink-0"
+                                    style={{
+                                        color: 'var(--secondary)',
+                                        border: 'none',
+                                        background: 'transparent'
+                                    }}
+                                    title={t('edit')}
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {note.body && (
+                                <div
+                                    className="text-sm line-clamp-2 mb-2"
+                                    style={{
+                                        color: 'var(--secondary)',
+                                        whiteSpace: 'pre-line',
+                                        wordWrap: 'break-word'
+                                    }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: note.body.replace(/\n/g, '<br/>')
+                                    }}
+                                />
+                            )}
+
+                            {/* Tags Display for Notes */}
+                            {tagLabels.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {tagLabels.map((tag, index) => (
+                                        <span
+                                            key={index}
+                                            className="inline-block px-4 py-2 text-xs rounded-full"
+                                            style={{
+                                                backgroundColor: '#e9d5ff',
+                                                color: '#7c3aed',
+                                                fontSize: '0.65rem',
+                                                fontWeight: '500'
+                                            }}
+                                        >
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
                 {notes.length === 0 && (
                     <div className="text-center py-8" style={{color: 'var(--secondary)'}}>
                         <svg className="w-12 h-12 mx-auto mb-3" style={{color: 'var(--border)'}} fill="none"
