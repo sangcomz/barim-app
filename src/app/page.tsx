@@ -215,31 +215,6 @@ function LandingPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* 더 보기 버튼 */}
-                {hasNextPage && (
-                    <div className="mt-6 text-center">
-                        <button
-                            onClick={handleLoadMore}
-                            disabled={isLoadingMore}
-                            className={`btn btn-secondary ${isLoadingMore ? 'opacity-75 cursor-not-allowed' : ''}`}
-                        >
-                            {isLoadingMore ? (
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                                    {t('loading')}...
-                                </div>
-                            ) : (
-                                <>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                    {t('loadMore')}
-                                </>
-                            )}
-                        </button>
-                    </div>
-                )}
             </div>
 
             {/* Footer */}
@@ -283,31 +258,6 @@ function LandingPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* 더 보기 버튼 */}
-                {hasNextPage && (
-                    <div className="mt-6 text-center">
-                        <button
-                            onClick={handleLoadMore}
-                            disabled={isLoadingMore}
-                            className={`btn btn-secondary ${isLoadingMore ? 'opacity-75 cursor-not-allowed' : ''}`}
-                        >
-                            {isLoadingMore ? (
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                                    {t('loading')}...
-                                </div>
-                            ) : (
-                                <>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                    {t('loadMore')}
-                                </>
-                            )}
-                        </button>
-                    </div>
-                )}
             </footer>
         </div>
     );
@@ -968,31 +918,6 @@ export default function HomePage() {
                         </div>
                     </div>
                 </div>
-
-                {/* 더 보기 버튼 */}
-                {hasNextPage && (
-                    <div className="mt-6 text-center">
-                        <button
-                            onClick={handleLoadMore}
-                            disabled={isLoadingMore}
-                            className={`btn btn-secondary ${isLoadingMore ? 'opacity-75 cursor-not-allowed' : ''}`}
-                        >
-                            {isLoadingMore ? (
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                                    {t('loading')}...
-                                </div>
-                            ) : (
-                                <>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                    {t('loadMore')}
-                                </>
-                            )}
-                        </button>
-                    </div>
-                )}
             </header>
 
             {/* Loading Progress Bar */}
@@ -1213,6 +1138,31 @@ export default function HomePage() {
                             </div>
                         </div>
                     </>
+                )}
+
+                {/* 더 보기 버튼 */}
+                {selectedRepo && hasNextPage && (
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={handleLoadMore}
+                            disabled={isLoadingMore}
+                            className={`btn btn-secondary ${isLoadingMore ? 'opacity-75 cursor-not-allowed' : ''}`}
+                        >
+                            {isLoadingMore ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                    {t('loading')}...
+                                </div>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                    {t('loadMore')}
+                                </>
+                            )}
+                        </button>
+                    </div>
                 )}
             </div>
 
