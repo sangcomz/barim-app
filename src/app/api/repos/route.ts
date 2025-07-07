@@ -13,6 +13,17 @@ interface GitHubLabel {
     description?: string;
 }
 
+// GitHub 이슈 타입 정의
+interface GitHubIssue {
+    id: number;
+    number: number;
+    title: string;
+    body?: string | null;
+    state: 'open' | 'closed';
+    state_reason?: string | null;
+    labels: GitHubLabel[];
+}
+
 // 프로젝트 정보 타입 정의
 interface Project {
     name: string;
@@ -92,15 +103,6 @@ export async function GET(request: Request) {
         
         for (const label of projectLabels) {
             try {
-                // 해당 프로젝트 라벨이 달린 이슈들 검색
-                const { data: issues } = await octokit.rest.issues.listForRepo({
-                    owner,
-                    repo: PHYSICAL_REPO,
-                    labels: label.name,
-                    state: 'all',
-                    per_page: 1, // 개수만 필요하므로 1개만 가져와서 total_count 사용
-                });
-
                 // 실제 이슈 개수를 정확히 계산하기 위해 모든 이슈를 가져옴
                 const { data: allIssues } = await octokit.rest.issues.listForRepo({
                     owner,
@@ -110,10 +112,10 @@ export async function GET(request: Request) {
                     per_page: 100,
                 });
 
-                const issueCount = allIssues.filter(issue => {
+                const issueCount = (allIssues as GitHubIssue[]).filter(issue => {
                     // 유효한 상태의 이슈만 카운트 (open이거나 completed로 closed된 것)
                     return issue.state === 'open' || 
-                           (issue.state === 'closed' && (issue as any).state_reason === 'completed');
+                           (issue.state === 'closed' && issue.state_reason === 'completed');
                 }).length;
 
                 const projectName = label.name.replace('project:', '');
