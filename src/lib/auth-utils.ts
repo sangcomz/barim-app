@@ -1,20 +1,21 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth";
+import { getInstallationAccessToken } from "./github-app";
 
 interface CustomSession {
     accessToken?: string;
+    provider?: string;
 }
 
 /**
  * 세션 또는 Authorization 헤더에서 액세스 토큰을 추출합니다.
- * 1. 먼저 session에서 토큰 확인
- * 2. session이 없으면 Authorization 헤더에서 토큰 확인
+ * GitHub Apps 방식을 우선적으로 처리합니다.
  */
 export async function getAccessToken(request?: Request): Promise<string | null> {
-    // 1. 세션에서 토큰 확인
+    // 1. 세션에서 토큰 확인 (GitHub Apps OAuth)
     try {
         const session: CustomSession | null = await getServerSession(authOptions);
-        if (session?.accessToken) {
+        if (session?.accessToken && session?.provider === "github") {
             return session.accessToken;
         }
     } catch {
@@ -46,25 +47,67 @@ export async function getAccessToken(request?: Request): Promise<string | null> 
 }
 
 /**
+ * GitHub Apps Installation Access Token을 가져옵니다.
+ * 앱 레벨의 작업에 사용됩니다.
+ */
+export async function getInstallationToken(): Promise<string | null> {
+    try {
+        return await getInstallationAccessToken();
+    } catch (error) {
+        console.error("Error getting installation access token:", error);
+        return null;
+    }
+}
+
+/**
+ * 사용자 인증을 위한 토큰을 가져옵니다.
+ * 사용자별 작업에 사용됩니다.
+ */
+export async function getUserToken(request?: Request): Promise<string | null> {
+    // 우선 사용자 세션에서 토큰을 가져옴
+    const userToken = await getAccessToken(request);
+    if (userToken) {
+        return userToken;
+    }
+
+    // 사용자 토큰이 없으면 Installation Token을 폴백으로 사용
+    return await getInstallationToken();
+}
+
+/**
  * 인증된 사용자인지 확인하고 액세스 토큰을 반환합니다.
+ * GitHub Apps 방식을 지원합니다.
  */
 export async function requireAuth(request?: Request): Promise<{ 
     token: string; 
-    fromSession: boolean 
+    fromSession: boolean;
+    isGitHubApp: boolean;
 } | null> {
-    const token = await getAccessToken(request);
+    const token = await getUserToken(request);
     
     if (!token) {
         return null;
     }
 
     let fromSession: boolean;
+    let isGitHubApp: boolean;
+    
     try {
         const session: CustomSession | null = await getServerSession(authOptions);
         fromSession = session?.accessToken === token;
+        isGitHubApp = session?.provider === "github" && fromSession;
     } catch {
         fromSession = false;
+        isGitHubApp = false;
     }
 
-    return { token, fromSession };
+    return { token, fromSession, isGitHubApp };
+}
+
+/**
+ * GitHub Apps 전용 인증을 요구합니다.
+ * Installation Access Token을 반환합니다.
+ */
+export async function requireAppAuth(): Promise<string | null> {
+    return await getInstallationToken();
 }

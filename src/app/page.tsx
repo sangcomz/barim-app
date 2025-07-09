@@ -4,6 +4,7 @@ import {useState, useEffect, FormEvent, ChangeEvent, useCallback} from 'react';
 import {useSession, signIn} from "next-auth/react";
 import {useLanguage} from '@/contexts/LanguageContext';
 import {SettingsDropdown} from '@/components/SettingsDropdown';
+import {GitHubAppsStatus} from '@/components/GitHubAppsStatus';
 
 // 데이터 타입 정의
 interface Label {
@@ -1041,6 +1042,9 @@ export default function HomePage() {
             )}
 
             <div className="container mx-auto py-6 flex-1">
+                {/* GitHub Apps Status */}
+                <GitHubAppsStatus />
+                
                 {selectedProject && (
                     <>
                         {/* Create New Item Button */}
