@@ -4,6 +4,7 @@ import {useState, useEffect, FormEvent, ChangeEvent, useCallback} from 'react';
 import {useSession, signIn} from "next-auth/react";
 import {useLanguage} from '@/contexts/LanguageContext';
 import {SettingsDropdown} from '@/components/SettingsDropdown';
+import {GitHubAppInstallOverlay} from '@/components/GitHubAppInstallOverlay';
 
 // 데이터 타입 정의
 interface Label {
@@ -568,6 +569,12 @@ export default function HomePage() {
     const [pendingReason, setPendingReason] = useState('');
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+    // GitHub App Install states
+    const [isAppInstalled, setIsAppInstalled] = useState(false);
+    const [hasBarimDataRepo, setHasBarimDataRepo] = useState(false);
+    const [showInstallOverlay, setShowInstallOverlay] = useState(false);
+    const [isCheckingInstall, setIsCheckingInstall] = useState(false);
+
     // Add Project modal states
     const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
     const [availableRepos, setAvailableRepos] = useState<Repository[]>([]);
@@ -583,6 +590,42 @@ export default function HomePage() {
     const [editBody, setEditBody] = useState('');
 
     // API 호출 함수들
+    const checkGitHubAppInstall = async () => {
+        if (!session?.accessToken) {
+            return;
+        }
+        
+        setIsCheckingInstall(true);
+        
+        try {
+            const response = await fetch('/api/github-app-install');
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('GitHub App 설치 상태:', data);
+                
+                setIsAppInstalled(data.isAppInstalled);
+                setHasBarimDataRepo(data.hasBarimDataRepo);
+                
+                // 앱이 설치되지 않았거나 barim-data 레포지토리가 없으면 오버레이 표시
+                if (!data.isAppInstalled || !data.hasBarimDataRepo) {
+                    console.log('오버레이 표시 - 앱 설치됨:', data.isAppInstalled, 'barim-data 존재:', data.hasBarimDataRepo);
+                    setShowInstallOverlay(true);
+                } else {
+                    setShowInstallOverlay(false);
+                }
+            } else {
+                console.error('GitHub App 설치 상태 확인 실패:', response.status);
+                setShowInstallOverlay(true);
+            }
+        } catch (error) {
+            console.error('Error checking GitHub App installation:', error);
+            setShowInstallOverlay(true);
+        } finally {
+            setIsCheckingInstall(false);
+        }
+    };
+
     const fetchProjects = async () => {
         try {
             const response = await fetch('/api/projects');
@@ -924,7 +967,10 @@ export default function HomePage() {
     };
 
     useEffect(() => {
-        if (status === 'authenticated') fetchProjects();
+        if (status === 'authenticated') {
+            checkGitHubAppInstall();
+            fetchProjects();
+        }
     }, [status]);
 
     useEffect(() => {
@@ -949,10 +995,13 @@ export default function HomePage() {
         }
     }, [refreshTrigger, selectedProject, fetchIssues]);
 
-    if (status === "loading") {
+    if (status === "loading" || isCheckingInstall) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="spinner"></div>
+            <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'var(--background)' }}>
+                <div className="spinner mb-4"></div>
+                <p className="text-sm" style={{ color: 'var(--secondary)' }}>
+                    {isCheckingInstall ? 'GitHub App 설치 상태 확인 중...' : '로딩 중...'}
+                </p>
             </div>
         );
     }
@@ -1278,6 +1327,13 @@ export default function HomePage() {
                     </div>
                 )}
             </div>
+
+            {/* GitHub App Install Overlay */}
+            {showInstallOverlay && (
+                <GitHubAppInstallOverlay 
+                    onClose={() => setShowInstallOverlay(false)} 
+                />
+            )}
 
             {/* Footer */}
             <footer style={{

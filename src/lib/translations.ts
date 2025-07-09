@@ -111,6 +111,26 @@ export const translations = {
     darkMode: "다크 모드로 변경",
     lightModeShort: "라이트 모드",
     darkModeShort: "다크 모드",
+    
+    // GitHub App Install
+    githubAppInstallRequired: "GitHub App 설치가 필요합니다",
+    whyGithubAppInstall: "왜 GitHub App 설치가 필요한가요?",
+    reasonSafeManagement: "barim-data 레포지토리의 이슈를 안전하게 관리하기 위해",
+    reasonMinimalPermissions: "최소한의 권한만 요청하여 보안을 강화",
+    reasonStableAccess: "더 안정적이고 빠른 API 접근을 위해",
+    createBarimDataRepo: "barim-data 레포지토리 생성",
+    createBarimDataDescription: "개인 작업 공간으로 사용할 private 레포지토리를 생성합니다.",
+    installGithubApp: "GitHub App 설치",
+    installGithubAppDescription: "barim-data 레포지토리에 대한 이슈 읽기/쓰기 권한만 부여합니다.",
+    minimalPermissionsTitle: "최소 권한 요청 이유:",
+    issueReadPermission: "이슈 읽기: 작업 목록을 불러오기 위해",
+    issueWritePermission: "이슈 쓰기: 작업 상태를 업데이트하기 위해",
+    noCodeAccess: "코드나 다른 데이터에는 접근하지 않습니다",
+    refreshAfterInstall: "GitHub App 설치 후 페이지를 새로고침하면 Barim을 사용할 수 있습니다.",
+    installLater: "나중에 설치하기",
+    creatingRepo: "레포지토리 생성 중...",
+    repoCreated: "barim-data 레포지토리가 생성되었습니다!",
+    repoCreationFailed: "레포지토리 생성에 실패했습니다. 다시 시도해 주세요.",
   },
   
   en: {
@@ -225,6 +245,26 @@ export const translations = {
     darkMode: "Switch to Dark Mode",
     lightModeShort: "Light Mode",
     darkModeShort: "Dark Mode",
+    
+    // GitHub App Install
+    githubAppInstallRequired: "GitHub App Installation Required",
+    whyGithubAppInstall: "Why is GitHub App installation required?",
+    reasonSafeManagement: "To safely manage issues in the barim-data repository",
+    reasonMinimalPermissions: "Enhanced security by requesting minimal permissions only",
+    reasonStableAccess: "For more stable and faster API access",
+    createBarimDataRepo: "Create barim-data Repository",
+    createBarimDataDescription: "Create a private repository to use as your personal workspace.",
+    installGithubApp: "Install GitHub App",
+    installGithubAppDescription: "Grant only issue read/write permissions for the barim-data repository.",
+    minimalPermissionsTitle: "Reasons for minimal permissions:",
+    issueReadPermission: "Issue Read: To load task lists",
+    issueWritePermission: "Issue Write: To update task status",
+    noCodeAccess: "No access to code or other data",
+    refreshAfterInstall: "You can use Barim after installing the GitHub App and refreshing the page.",
+    installLater: "Install Later",
+    creatingRepo: "Creating repository...",
+    repoCreated: "barim-data repository has been created!",
+    repoCreationFailed: "Failed to create repository. Please try again.",
   }
 };
 
