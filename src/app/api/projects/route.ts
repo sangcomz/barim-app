@@ -16,13 +16,24 @@ interface GitHubLabel {
     description?: string;
 }
 
-// GitHub 레포지토리 타입 정의
-interface GitHubRepository {
+// GitHub 이슈 타입 정의
+interface GitHubIssue {
     id: number;
+    number: number;
+    title: string;
+    body?: string | null;
+    state: 'open' | 'closed';
+    state_reason?: string | null;
+    labels: GitHubLabel[];
+}
+
+// 프로젝트 정보 타입 정의
+interface Project {
     name: string;
-    full_name: string;
-    description?: string | null;
-    updated_at: string;
+    label: string;
+    color: string;
+    description?: string;
+    issueCount: number;
 }
 
 // barim-data 레포지토리가 존재하는지 확인하고, 없으면 생성
@@ -60,7 +71,7 @@ async function ensureBarimDataRepo(octokit: Octokit, owner: string) {
     }
 }
 
-// GET: 사용자의 모든 레포지토리 목록 가져오기 (프로젝트 추가용)
+// GET: barim-data 레포지토리에서 project:xxx 라벨들을 기준으로 프로젝트 목록을 가져옵니다.
 export async function GET(request: Request) {
     const auth = await requireAuth(request);
     if (!auth) {
@@ -72,25 +83,84 @@ export async function GET(request: Request) {
     const octokit = new Octokit({ auth: auth.token });
 
     try {
-        const { data: repos } = await octokit.rest.repos.listForAuthenticatedUser({
-            type: "owner", // 내가 소유한 레포지토리만
-            sort: "updated",
-            per_page: 100, // 최대 100개까지
+        const { data: user } = await octokit.rest.users.getAuthenticated();
+        const owner = user.login;
+
+        // barim-data 레포지토리 존재 확인 및 생성
+        await ensureBarimDataRepo(octokit, owner);
+
+        // barim-data 레포지토리의 모든 라벨 가져오기
+        const { data: allLabels } = await octokit.rest.issues.listLabelsForRepo({
+            owner,
+            repo: PHYSICAL_REPO,
+            per_page: 100,
         });
+
+        // project:xxx 패턴의 라벨들만 필터링
+        const projectLabels = (allLabels as GitHubLabel[]).filter(label => 
+            label.name.startsWith('project:')
+        );
+
+        // 각 프로젝트 라벨에 대해 이슈 개수 계산
+        const projects: Project[] = [];
         
-        // barim-data 레포는 제외하고 반환
-        const filteredRepos = (repos as GitHubRepository[]).filter(repo => repo.name !== PHYSICAL_REPO);
+        for (const label of projectLabels) {
+            try {
+                // 실제 이슈 개수를 정확히 계산하기 위해 모든 이슈를 가져옴
+                const { data: allIssues } = await octokit.rest.issues.listForRepo({
+                    owner,
+                    repo: PHYSICAL_REPO,
+                    labels: label.name,
+                    state: 'all',
+                    per_page: 100,
+                });
+
+                const issueCount = (allIssues as GitHubIssue[]).filter(issue => {
+                    // 유효한 상태의 이슈만 카운트 (open이거나 completed로 closed된 것)
+                    return issue.state === 'open' || 
+                           (issue.state === 'closed' && issue.state_reason === 'completed');
+                }).length;
+
+                const projectName = label.name.replace('project:', '');
+                
+                projects.push({
+                    name: projectName,
+                    label: label.name,
+                    color: label.color,
+                    description: label.description || `Project: ${projectName}`,
+                    issueCount
+                });
+            } catch (error) {
+                console.warn(`Error fetching issues for project ${label.name}:`, error);
+                // 에러가 있어도 프로젝트는 포함시키되 이슈 개수는 0으로 설정
+                const projectName = label.name.replace('project:', '');
+                projects.push({
+                    name: projectName,
+                    label: label.name,
+                    color: label.color,
+                    description: label.description || `Project: ${projectName}`,
+                    issueCount: 0
+                });
+            }
+        }
+
+        // 프로젝트 이름 순으로 정렬
+        projects.sort((a, b) => a.name.localeCompare(b.name));
         
+        // 응답에 인증 방식 정보 추가 (디버깅용)
         return NextResponse.json({
-            repositories: filteredRepos,
+            projects,
             meta: {
                 authSource: auth.fromSession ? "session" : "header",
-                totalCount: filteredRepos.length
+                totalCount: projects.length,
+                physicalRepo: PHYSICAL_REPO,
+                owner,
+                note: "Projects are based on 'project:xxx' labels from barim-data repository"
             }
         });
     } catch (error) {
-        console.error("Error fetching repositories:", error);
-        return NextResponse.json({ message: "Error fetching repositories" }, { status: 500 });
+        console.error("Error fetching project labels:", error);
+        return NextResponse.json({ message: "Error fetching project labels" }, { status: 500 });
     }
 }
 
