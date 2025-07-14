@@ -11,7 +11,7 @@ export function GitHubAppInstallOverlay({ onClose }: GitHubAppInstallOverlayProp
 
     const handleCreateBarimData = () => {
         // GitHub에서 직접 레포지토리 생성 페이지로 이동
-        const createRepoUrl = 'https://github.com/new?repository_name=barim-data&description=Personal%20task%20and%20note%20management%20repository%20for%20Barim%20app&visibility=public';
+        const createRepoUrl = 'https://github.com/new?name=barim-data&description=Personal%20task%20and%20note%20management%20repository%20for%20Barim%20app&visibility=public';
         window.open(createRepoUrl, '_blank');
     };
 
