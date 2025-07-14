@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GitHubAppInstallOverlayProps {
@@ -9,34 +8,11 @@ interface GitHubAppInstallOverlayProps {
 
 export function GitHubAppInstallOverlay({ onClose }: GitHubAppInstallOverlayProps) {
     const { t } = useLanguage();
-    const [currentStep, setCurrentStep] = useState(1);
-    const [isCreatingRepo, setIsCreatingRepo] = useState(false);
-    const [repoCreated, setRepoCreated] = useState(false);
 
-    const handleCreateBarimData = async () => {
-        setIsCreatingRepo(true);
-        try {
-            const response = await fetch('/api/create-barim-data', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            
-            if (response.ok) {
-                setRepoCreated(true);
-                setCurrentStep(2);
-            } else {
-                const errorData = await response.json();
-                console.error('barim-data 생성 실패:', errorData);
-                throw new Error('Failed to create repository');
-            }
-        } catch (error) {
-            console.error('Error creating barim-data repository:', error);
-            alert(t('repoCreationFailed'));
-        } finally {
-            setIsCreatingRepo(false);
-        }
+    const handleCreateBarimData = () => {
+        // GitHub에서 직접 레포지토리 생성 페이지로 이동
+        const createRepoUrl = 'https://github.com/new?repository_name=barim-data&description=Personal%20task%20and%20note%20management%20repository%20for%20Barim%20app&visibility=public';
+        window.open(createRepoUrl, '_blank');
     };
 
     const handleInstallApp = () => {
@@ -85,12 +61,10 @@ export function GitHubAppInstallOverlay({ onClose }: GitHubAppInstallOverlayProp
                 {/* 단계별 안내 */}
                 <div className="space-y-4">
                     {/* 1단계: barim-data 생성 */}
-                    <div className={`p-4 rounded-lg border-2 ${currentStep === 1 ? 'border-blue-500' : repoCreated ? 'border-green-500' : 'border-gray-300'}`}>
+                    <div className="p-4 rounded-lg border-2 border-blue-500">
                         <div className="flex items-center gap-3 mb-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                                repoCreated ? 'bg-green-500' : currentStep === 1 ? 'bg-blue-500' : 'bg-gray-400'
-                            }`}>
-                                {repoCreated ? '✓' : '1'}
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-blue-500">
+                                1
                             </div>
                             <h3 className="font-semibold" style={{ color: 'var(--foreground)' }}>
                                 {t('createBarimDataRepo')}
@@ -101,37 +75,18 @@ export function GitHubAppInstallOverlay({ onClose }: GitHubAppInstallOverlayProp
                             {t('createBarimDataDescription')}
                         </p>
 
-                        {!repoCreated && (
-                            <button
-                                onClick={handleCreateBarimData}
-                                disabled={isCreatingRepo}
-                                className={`btn btn-primary ${isCreatingRepo ? 'opacity-75 cursor-not-allowed' : ''}`}
-                            >
-                                {isCreatingRepo ? (
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        {t('creatingRepo')}
-                                    </div>
-                                ) : (
-                                    t('createBarimDataRepo')
-                                )}
-                            </button>
-                        )}
-
-                        {repoCreated && (
-                            <div className="flex items-center gap-2 text-green-600">
-                                <span className="text-green-500">✓</span>
-                                <span className="text-sm">{t('repoCreated')}</span>
-                            </div>
-                        )}
+                        <button
+                            onClick={handleCreateBarimData}
+                            className="btn btn-primary"
+                        >
+                            {t('createBarimDataRepo')}
+                        </button>
                     </div>
 
                     {/* 2단계: GitHub App 설치 */}
-                    <div className={`p-4 rounded-lg border-2 ${currentStep === 2 ? 'border-blue-500' : !repoCreated ? 'border-gray-300' : 'border-gray-300'}`}>
+                    <div className="p-4 rounded-lg border-2 border-blue-500">
                         <div className="flex items-center gap-3 mb-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                                currentStep === 2 ? 'bg-blue-500' : !repoCreated ? 'bg-gray-400' : 'bg-gray-400'
-                            }`}>
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold bg-blue-500">
                                 2
                             </div>
                             <h3 className="font-semibold" style={{ color: 'var(--foreground)' }}>
@@ -156,8 +111,7 @@ export function GitHubAppInstallOverlay({ onClose }: GitHubAppInstallOverlayProp
 
                         <button
                             onClick={handleInstallApp}
-                            disabled={!repoCreated}
-                            className={`btn btn-primary ${!repoCreated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className="btn btn-primary"
                         >
                             {t('installGithubApp')}
                         </button>

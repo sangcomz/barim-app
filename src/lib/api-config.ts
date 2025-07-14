@@ -49,7 +49,13 @@ export const barimApi = {
     return response.json();
   },
 
-  async createIssue(token: string, data: any) {
+  async createIssue(token: string, data: {
+    title: string;
+    body: string;
+    repo: string;
+    issueType: string;
+    tags?: string[];
+  }) {
     const response = await fetch(API_ENDPOINTS.issues, {
       method: 'POST',
       headers: createAuthHeaders(token),
@@ -59,7 +65,14 @@ export const barimApi = {
     return response.json();
   },
 
-  async updateIssue(token: string, issueNumber: number, data: any) {
+  async updateIssue(token: string, issueNumber: number, data: {
+    repo?: string;
+    labels?: string[];
+    state?: string;
+    state_reason?: string;
+    title?: string;
+    body?: string | null;
+  }) {
     const response = await fetch(API_ENDPOINTS.issue(issueNumber), {
       method: 'POST',
       headers: createAuthHeaders(token),
@@ -86,6 +99,25 @@ export const barimApi = {
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     return response.json();
   },
+
+  async hasRepo(token: string, repoName: string): Promise<boolean> {
+    try {
+      const response = await fetch(API_ENDPOINTS.repo(repoName), {
+        headers: createAuthHeaders(token)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`Repository ${repoName} check result:`, data);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error(`Error checking for ${repoName} repository:`, error);
+      return false;
+    }
+  }
 };
 
 export { API_BASE_URL };

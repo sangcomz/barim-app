@@ -6,6 +6,7 @@ import {useLanguage} from '@/contexts/LanguageContext';
 import {SettingsDropdown} from '@/components/SettingsDropdown';
 import {GitHubAppInstallOverlay} from '@/components/GitHubAppInstallOverlay';
 import {barimApi} from '@/lib/api-config';
+import {checkGitHubAppInstallation} from '@/lib/github-utils';
 
 // 데이터 타입 정의
 interface Label {
@@ -571,8 +572,6 @@ export default function HomePage() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // GitHub App Install states
-    const [isAppInstalled, setIsAppInstalled] = useState(false);
-    const [hasBarimDataRepo, setHasBarimDataRepo] = useState(false);
     const [showInstallOverlay, setShowInstallOverlay] = useState(false);
     const [isCheckingInstall, setIsCheckingInstall] = useState(false);
 
@@ -591,7 +590,7 @@ export default function HomePage() {
     const [editBody, setEditBody] = useState('');
 
     // API 호출 함수들
-    const checkGitHubAppInstall = async () => {
+    const checkGitHubAppInstall = useCallback(async () => {
         if (!session?.accessToken) {
             return;
         }
@@ -599,25 +598,15 @@ export default function HomePage() {
         setIsCheckingInstall(true);
         
         try {
-            const response = await fetch('/api/github-app-install');
+            const data = await checkGitHubAppInstallation(session.accessToken);
+            console.log('GitHub App 설치 상태:', data);
             
-            if (response.ok) {
-                const data = await response.json();
-                console.log('GitHub App 설치 상태:', data);
-                
-                setIsAppInstalled(data.isAppInstalled);
-                setHasBarimDataRepo(data.hasBarimDataRepo);
-                
-                // 앱이 설치되지 않았거나 barim-data 레포지토리가 없으면 오버레이 표시
-                if (!data.isAppInstalled || !data.hasBarimDataRepo) {
-                    console.log('오버레이 표시 - 앱 설치됨:', data.isAppInstalled, 'barim-data 존재:', data.hasBarimDataRepo);
-                    setShowInstallOverlay(true);
-                } else {
-                    setShowInstallOverlay(false);
-                }
-            } else {
-                console.error('GitHub App 설치 상태 확인 실패:', response.status);
+            // 앱이 설치되지 않았거나 barim-data 레포지토리가 없으면 오버레이 표시
+            if (!data.isAppInstalled || !data.hasBarimDataRepo) {
+                console.log('오버레이 표시 - 앱 설치됨:', data.isAppInstalled, 'barim-data 존재:', data.hasBarimDataRepo);
                 setShowInstallOverlay(true);
+            } else {
+                setShowInstallOverlay(false);
             }
         } catch (error) {
             console.error('Error checking GitHub App installation:', error);
@@ -625,9 +614,9 @@ export default function HomePage() {
         } finally {
             setIsCheckingInstall(false);
         }
-    };
+    }, [session?.accessToken]);
 
-    const fetchProjects = async () => {
+    const fetchProjects = useCallback(async () => {
         try {
             if (!session?.accessToken) throw new Error('No access token available');
             const data = await barimApi.getProjects(session.accessToken);
@@ -648,7 +637,7 @@ export default function HomePage() {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
             setError(errorMessage);
         }
-    };
+    }, [session?.accessToken]);
 
     const fetchAvailableRepos = async () => {
         try {
@@ -758,7 +747,7 @@ export default function HomePage() {
                 setIsLoading(false);
             }
         }
-    }, [currentPage]);
+    }, [currentPage, session?.accessToken]);
 
     const handleCreateIssue = async (e: FormEvent) => {
         e.preventDefault();
@@ -940,7 +929,7 @@ export default function HomePage() {
             checkGitHubAppInstall();
             fetchProjects();
         }
-    }, [status]);
+    }, [status, checkGitHubAppInstall, fetchProjects]);
 
     useEffect(() => {
         if (selectedProject) {
