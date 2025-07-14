@@ -5,6 +5,7 @@ import {useSession, signIn} from "next-auth/react";
 import {useLanguage} from '@/contexts/LanguageContext';
 import {SettingsDropdown} from '@/components/SettingsDropdown';
 import {GitHubAppInstallOverlay} from '@/components/GitHubAppInstallOverlay';
+import {barimApi} from '@/lib/api-config';
 
 // 데이터 타입 정의
 interface Label {
@@ -628,9 +629,8 @@ export default function HomePage() {
 
     const fetchProjects = async () => {
         try {
-            const response = await fetch('/api/projects');
-            if (!response.ok) throw new Error('Failed to fetch projects.');
-            const data = await response.json();
+            if (!session?.accessToken) throw new Error('No access token available');
+            const data = await barimApi.getProjects(session.accessToken);
             const projects = data.projects || [];
             setAllProjects(projects);
 
@@ -652,9 +652,8 @@ export default function HomePage() {
 
     const fetchAvailableRepos = async () => {
         try {
-            const response = await fetch('/api/repos');
-            if (!response.ok) throw new Error('Failed to fetch repositories.');
-            const data = await response.json();
+            if (!session?.accessToken) throw new Error('No access token available');
+            const data = await barimApi.getRepos(session.accessToken);
             setAvailableRepos(data.repositories || []);
         } catch (err) {
             console.error('Error fetching repositories:', err);
@@ -679,19 +678,11 @@ export default function HomePage() {
 
         setIsLoading(true);
         try {
-            const response = await fetch('/api/projects', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    projectName,
-                    description: projectDescription.trim() || undefined,
-                }),
+            if (!session?.accessToken) throw new Error('No access token available');
+            await barimApi.createProject(session.accessToken, {
+                projectName,
+                description: projectDescription.trim() || undefined,
             });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create project.');
-            }
 
             // 모달 닫기 및 상태 초기화
             setIsAddProjectModalOpen(false);
@@ -728,16 +719,15 @@ export default function HomePage() {
         const targetPage = pageNum !== undefined ? pageNum : (appendMode ? currentPage + 1 : 1);
 
         try {
+            if (!session?.accessToken) throw new Error('No access token available');
             // 캐시 무효화를 위한 타임스탬프 추가
             const timestamp = new Date().getTime();
-            const response = await fetch(`/api/issues?repo=${projectName}&page=${targetPage}&_t=${timestamp}`, {
-                cache: 'no-store',
-                headers: {
-                    'Cache-Control': 'no-cache',
-                },
+            const params = new URLSearchParams({
+                repo: projectName,
+                page: targetPage.toString(),
+                _t: timestamp.toString()
             });
-            if (!response.ok) throw new Error('Failed to fetch issues.');
-            const data = await response.json();
+            const data = await barimApi.getIssues(session.accessToken, params);
             
             const newIssues = data.issues || data;
             
@@ -790,19 +780,15 @@ export default function HomePage() {
                 bodyWithTags = newIssueBody + (newIssueBody ? '\n\n' : '') + `Tags: ${tags.join(', ')}`;
             }
 
-            const response = await fetch('/api/issues', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    title: newIssueTitle,
-                    body: bodyWithTags,
-                    repo: selectedProject,
-                    issueType: createItemType,
-                    tags: createItemType === 'Note' && newTags.trim() ?
-                        newTags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
-                }),
+            if (!session?.accessToken) throw new Error('No access token available');
+            await barimApi.createIssue(session.accessToken, {
+                title: newIssueTitle,
+                body: bodyWithTags,
+                repo: selectedProject,
+                issueType: createItemType,
+                tags: createItemType === 'Note' && newTags.trim() ?
+                    newTags.split(',').map(tag => tag.trim()).filter(tag => tag) : []
             });
-            if (!response.ok) throw new Error('Failed to create issue.');
 
             setNewIssueTitle('');
             setNewIssueBody('');
@@ -858,12 +844,8 @@ export default function HomePage() {
         }
 
         try {
-            const response = await fetch(`/api/issues/${issue.number}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(updatePayload),
-            });
-            if (!response.ok) throw new Error('Failed to update issue state.');
+            if (!session?.accessToken) throw new Error('No access token available');
+            await barimApi.updateIssue(session.accessToken, issue.number, updatePayload);
 
             await fetchIssues(selectedProject, 1, false);
         } catch (err) {
@@ -884,22 +866,14 @@ export default function HomePage() {
                 name !== 'IN PROGRESS' && name !== 'TODO'
             );
             newLabels.push('PENDING');
-            await fetch(`/api/issues/${pendingIssue.number}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    repo: 'barim-data',
-                    labels: newLabels
-                }),
+            if (!session?.accessToken) throw new Error('No access token available');
+            await barimApi.updateIssue(session.accessToken, pendingIssue.number, {
+                repo: 'barim-data',
+                labels: newLabels
             });
 
-            await fetch(`/api/issues/${pendingIssue.number}/comments`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    body: `**PENDING:** ${pendingReason}`,
-                    repo: 'barim-data'
-                }),
+            await barimApi.addComment(session.accessToken, pendingIssue.number, {
+                body: `**PENDING:** ${pendingReason}`
             });
 
             setIsPendingModalOpen(false);
@@ -930,17 +904,12 @@ export default function HomePage() {
 
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/issues/${editingIssue.number}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    repo: 'barim-data',
-                    title: editTitle.trim(),
-                    body: editBody.trim() || null,
-                }),
+            if (!session?.accessToken) throw new Error('No access token available');
+            await barimApi.updateIssue(session.accessToken, editingIssue.number, {
+                repo: 'barim-data',
+                title: editTitle.trim(),
+                body: editBody.trim() || null,
             });
-
-            if (!response.ok) throw new Error('Failed to update issue.');
 
             setIsEditModalOpen(false);
             setEditingIssue(null);
