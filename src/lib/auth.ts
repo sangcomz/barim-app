@@ -5,12 +5,7 @@ export const authOptions: NextAuthOptions = {
     providers: [
         GithubProvider({
             clientId: process.env.GITHUB_APP_CLIENT_ID!,
-            clientSecret: process.env.GITHUB_APP_CLIENT_SECRET!,
-            authorization: {
-                params: {
-                    scope: "repo user",
-                },
-            },
+            clientSecret: process.env.GITHUB_APP_CLIENT_SECRET!
         }),
     ],
     secret: process.env.AUTH_SECRET,
