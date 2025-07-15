@@ -1048,38 +1048,48 @@ export default function HomePage() {
             )}
 
             <div className="container mx-auto py-6 flex-1">
+                {/* Create New Item Button */}
                 {selectedProject && (
-                    <>
-                        {/* Create New Item Button */}
-                        <div className="mb-6">
-                            <button
-                                onClick={() => setIsCreateModalOpen(true)}
-                                className="btn btn-primary flex items-center gap-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
-                                </svg>
-                                {t('createNewItem')}
-                            </button>
-                        </div>
+                    <div className="mb-6">
+                        <button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="btn btn-primary flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
+                            </svg>
+                            {t('createNewItem')}
+                        </button>
+                    </div>
+                )}
 
-                        {error && (
-                            <div className="rounded-lg p-4 mb-6" style={{
-                                backgroundColor: '#fef2f2',
-                                border: '1px solid #fecaca'
-                            }}>
-                                <p style={{color: '#b91c1c'}}>{t('error')}: {error}</p>
-                            </div>
-                        )}
+                {error && (
+                    <div className="rounded-lg p-4 mb-6" style={{
+                        backgroundColor: '#fef2f2',
+                        border: '1px solid #fecaca'
+                    }}>
+                        <p style={{color: '#b91c1c'}}>{t('error')}: {error}</p>
+                    </div>
+                )}
 
-                        {/* Main Content Area */}
-                        <div className="grid grid-cols-4 gap-6">
+                {/* Project Selection Message */}
+                {!selectedProject && (
+                    <div className="mb-6 p-4 rounded-lg text-center" style={{
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)'
+                    }}>
+                        <p style={{color: 'var(--secondary)'}}>{t('selectProjectToStart')}</p>
+                    </div>
+                )}
+
+                {/* Main Content Area */}
+                <div className="grid grid-cols-4 gap-6">
                             {/* Kanban Board - 3/4 */}
                             <div className="col-span-3">
                                 <div className="grid grid-cols-3 gap-4 mb-6 items-stretch">
                                     {/* TODO Column */}
-                                    <div className="group flex flex-col">
-                                        <div className="card p-4 h-full min-h-[200px] flex flex-col" style={{
+                                    <div className="group flex flex-col flex-1">
+                                        <div className="card p-4 h-full min-h-[400px] flex flex-col w-full" style={{
                                             background: 'var(--card)',
                                             border: '1px solid var(--border)'
                                         }}>
@@ -1106,7 +1116,7 @@ export default function HomePage() {
                                                 ))}
                                                 {todoTasks.length === 0 && (
                                                     <div
-                                                        className="flex flex-col items-center justify-center text-center h-full min-h-[300px]"
+                                                        className="flex flex-col items-center justify-center text-center h-full min-h-[350px]"
                                                         style={{color: 'var(--secondary)'}}>
                                                         <div
                                                             className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -1120,8 +1130,8 @@ export default function HomePage() {
                                     </div>
 
                                     {/* IN PROGRESS Column */}
-                                    <div className="group flex flex-col">
-                                        <div className="card p-4 h-full min-h-[200px] flex flex-col" style={{
+                                    <div className="group flex flex-col flex-1">
+                                        <div className="card p-4 h-full min-h-[400px] flex flex-col w-full" style={{
                                             background: 'var(--card)',
                                             border: '1px solid var(--border)'
                                         }}>
@@ -1148,7 +1158,7 @@ export default function HomePage() {
                                                 ))}
                                                 {inProgressTasks.length === 0 && (
                                                     <div
-                                                        className="flex flex-col items-center justify-center text-center h-full min-h-[300px]"
+                                                        className="flex flex-col items-center justify-center text-center h-full min-h-[350px]"
                                                         style={{color: 'var(--secondary)'}}>
                                                         <div
                                                             className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -1162,8 +1172,8 @@ export default function HomePage() {
                                     </div>
 
                                     {/* DONE Column */}
-                                    <div className="group flex flex-col">
-                                        <div className="card p-4 h-full min-h-[200px] flex flex-col" style={{
+                                    <div className="group flex flex-col flex-1">
+                                        <div className="card p-4 h-full min-h-[400px] flex flex-col w-full" style={{
                                             background: 'var(--card)',
                                             border: '1px solid var(--border)'
                                         }}>
@@ -1190,7 +1200,7 @@ export default function HomePage() {
                                                 ))}
                                                 {doneTasks.length === 0 && (
                                                     <div
-                                                        className="flex flex-col items-center justify-center text-center h-full min-h-[300px]"
+                                                        className="flex flex-col items-center justify-center text-center h-full min-h-[350px]"
                                                         style={{color: 'var(--secondary)'}}>
                                                         <div
                                                             className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -1234,29 +1244,15 @@ export default function HomePage() {
                                                     </div>
                                                 ))}
                                                 {pendingTasks.length === 0 && (
-                                                    <>
-                                                        {[...Array(4)].map((_, index) => (
-                                                            <div
-                                                                key={index}
-                                                                className="group relative mb-3 p-4 rounded-xl transition-all duration-200 opacity-30"
-                                                                style={{
-                                                                    background: 'var(--card)',
-                                                                    border: '1px solid var(--border)',
-                                                                    borderLeftWidth: '8px',
-                                                                    borderLeftColor: '#EAB308',
-                                                                    minHeight: '120px'
-                                                                }}>
-                                                                <div className="flex flex-col items-center justify-center text-center h-full">
-                                                                    <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                                                                        <span className="text-sm">⏸️</span>
-                                                                    </div>
-                                                                    <p className="text-xs" style={{color: 'var(--secondary)'}}>
-                                                                        {index === 0 ? t('noPending') : ''}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </>
+                                                    <div
+                                                        className="col-span-4 flex flex-col items-center justify-center text-center h-full min-h-[350px]"
+                                                        style={{color: 'var(--secondary)'}}>
+                                                        <div
+                                                            className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                                                            <span className="text-2xl">⏸️</span>
+                                                        </div>
+                                                        <p className="text-sm">{t('noPending')}</p>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -1267,12 +1263,10 @@ export default function HomePage() {
                             {/* Notes Section - 1/4 */}
                             <div className="col-span-1">
                                 <div className="card p-4">
-                                    <NotesList issues={issues} onEdit={handleEditIssue}/>
+                                    <NotesList issues={selectedProject ? issues : []} onEdit={handleEditIssue}/>
                                 </div>
                             </div>
                         </div>
-                    </>
-                )}
 
                 {/* 더 보기 버튼 */}
                 {selectedProject && hasNextPage && (
