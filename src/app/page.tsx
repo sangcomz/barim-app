@@ -574,6 +574,7 @@ export default function HomePage() {
     // GitHub App Install states
     const [showInstallOverlay, setShowInstallOverlay] = useState(false);
     const [isCheckingInstall, setIsCheckingInstall] = useState(false);
+    const [isGitHubAppInstalled, setIsGitHubAppInstalled] = useState(false);
 
     // Add Project modal states
     const [isAddProjectModalOpen, setIsAddProjectModalOpen] = useState(false);
@@ -601,8 +602,12 @@ export default function HomePage() {
             const data = await checkGitHubAppInstallation(session.accessToken);
             console.log('GitHub App 설치 상태:', data);
             
+            // 실제 GitHub 앱 설치 상태 업데이트
+            const appInstalled = data.isAppInstalled && data.hasBarimDataRepo;
+            setIsGitHubAppInstalled(appInstalled);
+            
             // 앱이 설치되지 않았거나 barim-data 레포지토리가 없으면 오버레이 표시
-            if (!data.isAppInstalled || !data.hasBarimDataRepo) {
+            if (!appInstalled) {
                 console.log('오버레이 표시 - 앱 설치됨:', data.isAppInstalled, 'barim-data 존재:', data.hasBarimDataRepo);
                 setShowInstallOverlay(true);
             } else {
@@ -610,6 +615,7 @@ export default function HomePage() {
             }
         } catch (error) {
             console.error('Error checking GitHub App installation:', error);
+            setIsGitHubAppInstalled(false);
             setShowInstallOverlay(true);
         } finally {
             setIsCheckingInstall(false);
@@ -1063,7 +1069,7 @@ export default function HomePage() {
                     </div>
                 )}
 
-                {error && (
+                {error && isGitHubAppInstalled && (
                     <div className="rounded-lg p-4 mb-6" style={{
                         backgroundColor: '#fef2f2',
                         border: '1px solid #fecaca'

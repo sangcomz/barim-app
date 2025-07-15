@@ -39,7 +39,7 @@ export const translations = {
     noDone: "완료된 작업이 없습니다",
     noPending: "보류된 작업이 없습니다",
     noNotes: "등록된 노트가 없습니다",
-    selectProjectToStart: "프로젝트를 선택하여 시작하세요",
+    selectProjectToStart: "GitHub 앱을 설치해서 사용해보세요",
     
     // Actions
     start: "시작",
@@ -174,7 +174,7 @@ export const translations = {
     noDone: "No completed tasks",
     noPending: "No pending tasks",
     noNotes: "No notes registered",
-    selectProjectToStart: "Select a project to get started",
+    selectProjectToStart: "Install the GitHub app to get started",
     
     // Actions
     start: "Start",
