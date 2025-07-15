@@ -982,8 +982,8 @@ export default function HomePage() {
                 background: 'var(--card)',
                 borderBottom: '1px solid var(--border)'
             }}>
-                <div className="container mx-auto">
-                    <div className="flex justify-between items-center py-4">
+                <div className="w-full px-6 py-6 p-4">
+                    <div className="flex justify-between items-center py-6">
                         <div className="flex items-center gap-6">
                             <h1 className="text-2xl font-bold" style={{color: 'var(--foreground)'}}>Barim</h1>
                             <div className="text-sm" style={{color: 'var(--secondary)'}}>
