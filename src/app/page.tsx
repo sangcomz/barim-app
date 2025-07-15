@@ -1234,15 +1234,29 @@ export default function HomePage() {
                                                     </div>
                                                 ))}
                                                 {pendingTasks.length === 0 && (
-                                                    <div
-                                                        className="col-span-4 flex flex-col items-center justify-center text-center h-full"
-                                                        style={{color: 'var(--secondary)'}}>
-                                                        <div
-                                                            className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                                                            <span className="text-2xl">⏸️</span>
-                                                        </div>
-                                                        <p className="text-sm">{t('noPending')}</p>
-                                                    </div>
+                                                    <>
+                                                        {[...Array(4)].map((_, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className="group relative mb-3 p-4 rounded-xl transition-all duration-200 opacity-30"
+                                                                style={{
+                                                                    background: 'var(--card)',
+                                                                    border: '1px solid var(--border)',
+                                                                    borderLeftWidth: '8px',
+                                                                    borderLeftColor: '#EAB308',
+                                                                    minHeight: '120px'
+                                                                }}>
+                                                                <div className="flex flex-col items-center justify-center text-center h-full">
+                                                                    <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                                                                        <span className="text-sm">⏸️</span>
+                                                                    </div>
+                                                                    <p className="text-xs" style={{color: 'var(--secondary)'}}>
+                                                                        {index === 0 ? t('noPending') : ''}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </>
                                                 )}
                                             </div>
                                         </div>
