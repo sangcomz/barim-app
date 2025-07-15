@@ -1047,7 +1047,7 @@ export default function HomePage() {
                 </div>
             )}
 
-            <div className="container mx-auto py-6 flex-1">
+            <div className="w-full px-6 py-6 flex-1">
                 {/* Create New Item Button */}
                 {selectedProject && (
                     <div className="mb-6">
@@ -1088,7 +1088,7 @@ export default function HomePage() {
                             <div className="col-span-3">
                                 <div className="grid grid-cols-3 gap-4 mb-6 items-stretch">
                                     {/* TODO Column */}
-                                    <div className="group flex flex-col flex-1">
+                                    <div className="group flex flex-col">
                                         <div className="card p-4 h-full min-h-[400px] flex flex-col w-full" style={{
                                             background: 'var(--card)',
                                             border: '1px solid var(--border)'
@@ -1130,7 +1130,7 @@ export default function HomePage() {
                                     </div>
 
                                     {/* IN PROGRESS Column */}
-                                    <div className="group flex flex-col flex-1">
+                                    <div className="group flex flex-col">
                                         <div className="card p-4 h-full min-h-[400px] flex flex-col w-full" style={{
                                             background: 'var(--card)',
                                             border: '1px solid var(--border)'
@@ -1172,7 +1172,7 @@ export default function HomePage() {
                                     </div>
 
                                     {/* DONE Column */}
-                                    <div className="group flex flex-col flex-1">
+                                    <div className="group flex flex-col">
                                         <div className="card p-4 h-full min-h-[400px] flex flex-col w-full" style={{
                                             background: 'var(--card)',
                                             border: '1px solid var(--border)'
