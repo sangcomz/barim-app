@@ -50,6 +50,7 @@ export const translations = {
     delete: "삭제",
     createNewItem: "새 항목 생성",
     addProject: "프로젝트 추가",
+    setupGitHub: "GitHub 설정",
     
     editCard: "카드 편집",
     pendingReason: "보류 사유",
@@ -185,6 +186,7 @@ export const translations = {
     delete: "Delete",
     createNewItem: "Create New Item",
     addProject: "Add Project",
+    setupGitHub: "Setup GitHub",
     
     editCard: "Edit Card",
     pendingReason: "Pending Reason",

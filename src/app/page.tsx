@@ -1003,6 +1003,7 @@ export default function HomePage() {
                                     onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedProject(e.target.value)}
                                     className="select text-sm"
                                     style={{minWidth: '280px'}}
+                                    disabled={!isGitHubAppInstalled}
                                 >
                                     <option value="">{t('selectProject')}</option>
                                     {allProjects.map(project => (
@@ -1023,20 +1024,33 @@ export default function HomePage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            {/* Add Project Button */}
-                            <button
-                                onClick={() => {
-                                    setIsAddProjectModalOpen(true);
-                                    fetchAvailableRepos();
-                                }}
-                                className="btn btn-secondary text-sm flex items-center gap-2"
-                                title={t('addProject')}
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
-                                </svg>
-                                {t('addProject')}
-                            </button>
+                            {/* Add Project Button or GitHub Setup Button */}
+                            {isGitHubAppInstalled ? (
+                                <button
+                                    onClick={() => {
+                                        setIsAddProjectModalOpen(true);
+                                        fetchAvailableRepos();
+                                    }}
+                                    className="btn btn-secondary text-sm flex items-center gap-2"
+                                    title={t('addProject')}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    {t('addProject')}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => setShowInstallOverlay(true)}
+                                    className="btn btn-primary text-sm flex items-center gap-2"
+                                    title={t('setupGitHub')}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                    </svg>
+                                    {t('setupGitHub')}
+                                </button>
+                            )}
                             <SettingsDropdown/>
                         </div>
                     </div>
