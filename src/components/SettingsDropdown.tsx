@@ -80,7 +80,10 @@ export function SettingsDropdown() {
   };
 
   const clickPluginLink = () => {
-    window.open('https://github.com/sangcomz/barim-app/blob/main/PLUGINS.md', '_blank');
+    const pluginUrl = language === 'ko' 
+      ? 'https://github.com/sangcomz/barim-app/blob/main/PLUGINS_KO.md'
+      : 'https://github.com/sangcomz/barim-app/blob/main/PLUGINS.md';
+    window.open(pluginUrl, '_blank');
     setIsOpen(false);
   }
 

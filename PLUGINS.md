@@ -1,22 +1,24 @@
 # Barim Plugins
 
-Barim의 기능을 IDE에서 직접 사용할 수 있는 플러그인들을 제공합니다.
+[한국어](PLUGINS_KO.md) | English
+
+Barim plugins allow you to use Barim's features directly in your IDE.
 
 ## IntelliJ IDEA Plugin
 
-[JetBrains Marketplace](https://plugins.jetbrains.com/plugin/27892) | [GitHub](https://github.com/sangcomz/barim-intelij-plugin)
+[JetBrains Marketplace](https://plugins.jetbrains.com/plugin/27892) | [GitHub](https://github.com/sangcomz/barim-intellij-plugin)
 
-Barim IntelliJ IDEA 플러그인을 사용하면 IDE를 떠나지 않고도 Barim의 모든 기능을 활용할 수 있습니다. 프로젝트 관리, 이슈 추적, 노트 작성 등의 작업을 개발 환경에서 바로 수행할 수 있습니다.
+With the Barim IntelliJ IDEA plugin, you can leverage all of Barim's features without leaving your IDE. Perform project management, issue tracking, note-taking, and more directly from your development environment.
 
-### 설치 방법
+### Installation
 
-#### JetBrains Marketplace에서 설치
+#### Install from JetBrains Marketplace
 
-1. IntelliJ IDEA를 열고 `Settings/Preferences` > `Plugins`로 이동
-2. `Marketplace` 탭에서 "Barim"을 검색
-3. `Install` 버튼을 클릭하여 설치
-4. IDE를 재시작
+1. Open IntelliJ IDEA and go to `Settings/Preferences` > `Plugins`
+2. Search for "Barim" in the `Marketplace` tab
+3. Click the `Install` button
+4. Restart your IDE
 
 ---
 
-원하는 IDE가 있다면 [GitHub Issues](https://github.com/sangcomz/barim-app/issues)에서 요청해주세요!
+Want a plugin for another IDE? Request it through [GitHub Issues](https://github.com/sangcomz/barim-app/issues)!
