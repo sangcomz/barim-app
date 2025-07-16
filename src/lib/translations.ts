@@ -51,6 +51,7 @@ export const translations = {
     createNewItem: "새 항목 생성",
     addProject: "프로젝트 추가",
     setupGitHub: "GitHub 설정",
+    plugins: "플러그인",
     
     editCard: "카드 편집",
     pendingReason: "보류 사유",
@@ -187,6 +188,7 @@ export const translations = {
     createNewItem: "Create New Item",
     addProject: "Add Project",
     setupGitHub: "Setup GitHub",
+    plugins: "Plugins",
     
     editCard: "Edit Card",
     pendingReason: "Pending Reason",

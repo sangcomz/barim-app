@@ -79,6 +79,11 @@ export function SettingsDropdown() {
     setIsOpen(false);
   };
 
+  const clickPluginLink = () => {
+    window.open('https://github.com/sangcomz/barim-app/blob/main/PLUGINS.md', '_blank');
+    setIsOpen(false);
+  }
+
   // 마운트되지 않았으면 로딩 상태 표시
   if (!mounted) {
     return (
@@ -176,6 +181,20 @@ export function SettingsDropdown() {
             <span>
               {isDark ? t('lightModeShort') : t('darkModeShort')}
             </span>
+          </button>
+
+          {/* 플러그인 링크 */}
+          <button
+              onClick={clickPluginLink}
+              className={`w-full px-4 py-4 text-center ${
+                  isDark ? 'bg-black text-white' : 'bg-white text-black'
+              }`}
+              style={{
+                whiteSpace: 'nowrap',
+                border: 'none'
+              }}
+          >
+            <span>{t('plugins')}</span>
           </button>
 
           {/* 구분선 - 로그인된 경우에만 표시 */}
