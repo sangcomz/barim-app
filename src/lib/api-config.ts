@@ -1,5 +1,3 @@
-import { getSession } from 'next-auth/react';
-
 const API_BASE_URL = 'https://barim-api.vercel.app';
 
 // 토큰 리프레시 함수
