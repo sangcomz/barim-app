@@ -35,8 +35,8 @@ async function apiRequest<T>(
 ): Promise<T> {
   try {
     return await apiCall(token);
-  } catch (error: any) {
-    if (error.message.includes('401') && maxRetries > 0) {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message.includes('401') && maxRetries > 0) {
       console.log('401 error detected, attempting token refresh...');
       const newToken = await refreshToken();
       if (newToken) {
