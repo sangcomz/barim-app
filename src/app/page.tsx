@@ -988,21 +988,21 @@ export default function HomePage() {
                 background: 'var(--card)',
                 borderBottom: '1px solid var(--border)'
             }}>
-                <div className="w-full px-6 py-6 p-4">
-                    <div className="flex justify-between items-center py-6">
-                        <div className="flex items-center gap-6">
-                            <h1 className="text-2xl font-bold" style={{color: 'var(--foreground)'}}>Barim</h1>
+                <div className="w-full px-4 sm:px-6 py-4 sm:py-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+                            <h1 className="text-xl sm:text-2xl font-bold" style={{color: 'var(--foreground)'}}>Barim</h1>
                             <div className="text-sm" style={{color: 'var(--secondary)'}}>
                                 {session.user?.name}{t('greeting')}
                             </div>
 
                             {/* Project Selector */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                                 <select
                                     value={selectedProject}
                                     onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedProject(e.target.value)}
-                                    className="select text-sm"
-                                    style={{minWidth: '280px'}}
+                                    className="select text-sm w-full sm:w-auto"
+                                    style={{minWidth: '200px'}}
                                     disabled={!isGitHubAppInstalled}
                                 >
                                     <option value="">{t('selectProject')}</option>
@@ -1023,7 +1023,7 @@ export default function HomePage() {
                                 )}
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                             {/* Add Project Button or GitHub Setup Button */}
                             {isGitHubAppInstalled ? (
                                 <button
@@ -1031,24 +1031,26 @@ export default function HomePage() {
                                         setIsAddProjectModalOpen(true);
                                         fetchAvailableRepos();
                                     }}
-                                    className="btn btn-secondary text-sm flex items-center gap-2"
+                                    className="btn btn-secondary text-sm flex items-center justify-center gap-2 py-3"
                                     title={t('addProject')}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
                                     </svg>
-                                    {t('addProject')}
+                                    <span className="hidden sm:inline">{t('addProject')}</span>
+                                    <span className="sm:hidden">프로젝트 추가</span>
                                 </button>
                             ) : (
                                 <button
                                     onClick={() => setShowInstallOverlay(true)}
-                                    className="btn btn-primary text-sm flex items-center gap-2"
+                                    className="btn btn-primary text-sm flex items-center justify-center gap-2 py-3"
                                     title={t('setupGitHub')}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                                     </svg>
-                                    {t('setupGitHub')}
+                                    <span className="hidden sm:inline">{t('setupGitHub')}</span>
+                                    <span className="sm:hidden">GitHub 설정</span>
                                 </button>
                             )}
                             <SettingsDropdown/>
@@ -1067,13 +1069,13 @@ export default function HomePage() {
                 </div>
             )}
 
-            <div className="w-full px-6 py-6 flex-1">
+            <div className="w-full px-4 sm:px-6 py-4 sm:py-6 flex-1">
                 {/* Create New Item Button */}
                 {selectedProject && (
                     <div className="mb-6">
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="btn btn-primary flex items-center gap-2"
+                            className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto py-3"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
@@ -1103,10 +1105,10 @@ export default function HomePage() {
                 )}
 
                 {/* Main Content Area */}
-                <div className="grid grid-cols-4 gap-6">
-                            {/* Kanban Board - 3/4 */}
-                            <div className="col-span-3">
-                                <div className="grid grid-cols-3 gap-4 mb-6 items-stretch">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                            {/* Kanban Board - 3/4 on desktop, full width on mobile */}
+                            <div className="lg:col-span-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 items-stretch">
                                     {/* TODO Column */}
                                     <div className="group flex flex-col">
                                         <div className="card p-4 h-full min-h-[400px] flex flex-col w-full" style={{
@@ -1252,7 +1254,7 @@ export default function HomePage() {
                                                 </div>
                                             </h3>
                                             <div
-                                                className="grid grid-cols-4 gap-3 max-h-80 overflow-y-auto min-h-[300px]">
+                                                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-80 overflow-y-auto min-h-[300px]">
                                                 {pendingTasks.map(task => (
                                                     <div key={task.id} className="group">
                                                         <KanbanCard
@@ -1265,7 +1267,7 @@ export default function HomePage() {
                                                 ))}
                                                 {pendingTasks.length === 0 && (
                                                     <div
-                                                        className="col-span-4 flex flex-col items-center justify-center text-center h-full min-h-[350px]"
+                                                        className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4 flex flex-col items-center justify-center text-center h-full min-h-[350px]"
                                                         style={{color: 'var(--secondary)'}}>
                                                         <div
                                                             className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
@@ -1280,8 +1282,8 @@ export default function HomePage() {
                                 </div>
                             </div>
 
-                            {/* Notes Section - 1/4 */}
-                            <div className="col-span-1">
+                            {/* Notes Section - 1/4 on desktop, full width on mobile */}
+                            <div className="lg:col-span-1">
                                 <div className="card p-4">
                                     <NotesList issues={selectedProject ? issues : []} onEdit={handleEditIssue}/>
                                 </div>
@@ -1327,7 +1329,7 @@ export default function HomePage() {
                 borderTop: '1px solid var(--border)',
                 marginTop: '24px'
             }}>
-                <div className="w-full px-6 py-6">
+                <div className="w-full px-4 sm:px-6 py-4 sm:py-6">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                         {/* Left: Logo & Copyright */}
                         <div className="flex items-center gap-4">

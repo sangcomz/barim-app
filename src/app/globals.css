@@ -615,30 +615,64 @@ body {
 .max-w-6xl { max-width: 72rem; }
 
 /* Responsive utilities */
+@media (min-width: 640px) {
+  .sm\:flex-row { flex-direction: row; }
+  .sm\:items-center { align-items: center; }
+  .sm\:justify-between { justify-content: space-between; }
+  .sm\:w-auto { width: auto; }
+  .sm\:px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .sm\:py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+  .sm\:text-2xl { font-size: 1.5rem; }
+  .sm\:gap-3 { gap: 0.75rem; }
+  .sm\:gap-6 { gap: 1.5rem; }
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sm\:inline { display: inline; }
+  .sm\:hidden { display: none; }
+  .sm\:col-span-2 { grid-column: span 2 / span 2; }
+}
+
 @media (min-width: 768px) {
   .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .md\:col-span-2 { grid-column: span 2 / span 2; }
+  .md\:col-span-3 { grid-column: span 3 / span 3; }
   .md\:flex-row { flex-direction: row; }
   .md\:text-7xl { font-size: 4.5rem; }
   .md\:text-2xl { font-size: 1.5rem; }
 }
 
-@media (max-width: 1024px) {
-  .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .col-span-3 { grid-column: span 2 / span 2; }
-  .col-span-1 { grid-column: span 2 / span 2; }
+@media (min-width: 1024px) {
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .lg\:col-span-1 { grid-column: span 1 / span 1; }
+  .lg\:col-span-3 { grid-column: span 3 / span 3; }
+  .lg\:col-span-4 { grid-column: span 4 / span 4; }
 }
 
-@media (max-width: 768px) {
-  .grid-cols-4 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-  .col-span-3, .col-span-1 { grid-column: span 1 / span 1; }
-  
+@media (max-width: 640px) {
   .container {
-    padding: 0 16px;
+    padding: 0 12px;
   }
   
-  .text-6xl { font-size: 3rem; }
-  .text-3xl { font-size: 1.875rem; }
+  .text-6xl { font-size: 2.5rem; }
+  .text-3xl { font-size: 1.75rem; }
+  
+  .btn {
+    min-height: 44px; /* 터치 타겟 최소 크기 */
+  }
+  
+  .select, .input, .textarea {
+    min-height: 44px; /* 터치 타겟 최소 크기 */
+  }
+  
+  /* 모바일에서 카드 간격 조정 */
+  .card {
+    padding: 16px;
+  }
+  
+  /* 모바일에서 최소 높이 조정 */
+  .min-h-\[400px\] { min-height: 300px; }
+  .min-h-\[300px\] { min-height: 250px; }
+  .min-h-\[350px\] { min-height: 280px; }
 }
