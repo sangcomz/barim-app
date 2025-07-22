@@ -7,13 +7,16 @@ declare module 'next-auth' {
      */
     interface Session {
         accessToken?: string;
+        error?: string;
     }
 }
 
 declare module 'next-auth/jwt' {
     /** Returned by the `jwt` callback and `getToken`, when using JWT sessions */
     interface JWT {
-        /** This is an example. You can find me in types/next-auth.d.ts */
         accessToken?: string;
+        refreshToken?: string;
+        expiresAt?: number;
+        error?: string;
     }
 }
