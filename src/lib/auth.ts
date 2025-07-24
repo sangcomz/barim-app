@@ -1,5 +1,5 @@
 import GithubProvider from "next-auth/providers/github"
-import { NextAuthOptions } from "next-auth"
+import { NextAuthOptions, JWT } from "next-auth"
 
 interface TokenData {
   accessToken?: string;
@@ -9,7 +9,7 @@ interface TokenData {
   user?: unknown;
 }
 
-async function refreshAccessToken(token: TokenData): Promise<TokenData> {
+async function refreshAccessToken(token: JWT): Promise<JWT> {
   try {
     // GitHub OAuth App은 refresh token을 제공하지 않음
     // refresh token이 없으면 재로그인 필요
@@ -70,7 +70,7 @@ export const authOptions: NextAuthOptions = {
     ],
     secret: process.env.AUTH_SECRET,
     callbacks: {
-        async jwt({ token, account, user }) {
+        async jwt({ token, account, user }): Promise<JWT> {
             // 첫 로그인시
             if (account && user) {
                 console.log('GitHub OAuth account info:', {
@@ -82,6 +82,7 @@ export const authOptions: NextAuthOptions = {
                 });
                 
                 return {
+                    ...token,
                     accessToken: account.access_token,
                     refreshToken: account.refresh_token,
                     expiresAt: account.expires_at || Math.floor(Date.now() / 1000 + (account.expires_in || 3600 * 24 * 365)), // OAuth App은 1년
