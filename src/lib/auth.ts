@@ -1,7 +1,15 @@
 import GithubProvider from "next-auth/providers/github"
 import { NextAuthOptions } from "next-auth"
 
-async function refreshAccessToken(token: any) {
+interface TokenData {
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  error?: string;
+  user?: any;
+}
+
+async function refreshAccessToken(token: TokenData): Promise<TokenData> {
   try {
     // GitHub OAuth App은 refresh token을 제공하지 않음
     // refresh token이 없으면 재로그인 필요

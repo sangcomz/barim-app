@@ -942,7 +942,7 @@ export default function HomePage() {
             checkGitHubAppInstall();
             fetchProjects();
         }
-    }, [status, session?.error, checkGitHubAppInstall, fetchProjects, signOut]);
+    }, [status, session?.error, checkGitHubAppInstall, fetchProjects]);
 
     useEffect(() => {
         if (selectedProject) {
