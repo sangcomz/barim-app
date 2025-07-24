@@ -1,14 +1,6 @@
 import GithubProvider from "next-auth/providers/github"
 import { NextAuthOptions, JWT } from "next-auth"
 
-interface TokenData {
-  accessToken?: string;
-  refreshToken?: string;
-  expiresAt?: number;
-  error?: string;
-  user?: unknown;
-}
-
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   try {
     // GitHub OAuth App은 refresh token을 제공하지 않음
