@@ -1,5 +1,6 @@
 import GithubProvider from "next-auth/providers/github"
-import { NextAuthOptions, JWT } from "next-auth"
+import { NextAuthOptions } from "next-auth"
+import { JWT } from "next-auth/jwt"
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   try {
@@ -77,7 +78,7 @@ export const authOptions: NextAuthOptions = {
                     ...token,
                     accessToken: account.access_token,
                     refreshToken: account.refresh_token,
-                    expiresAt: account.expires_at || Math.floor(Date.now() / 1000 + (account.expires_in || 3600 * 24 * 365)), // OAuth App은 1년
+                    expiresAt: account.expires_at || Math.floor(Date.now() / 1000 + ((account.expires_in as number) || 3600 * 24 * 365)), // OAuth App은 1년
                     user,
                 }
             }
