@@ -6,7 +6,7 @@ interface TokenData {
   refreshToken?: string;
   expiresAt?: number;
   error?: string;
-  user?: any;
+  user?: unknown;
 }
 
 async function refreshAccessToken(token: TokenData): Promise<TokenData> {
