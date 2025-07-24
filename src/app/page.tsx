@@ -1,7 +1,7 @@
 'use client';
 
 import {useState, useEffect, FormEvent, ChangeEvent, useCallback} from 'react';
-import {useSession, signIn} from "next-auth/react";
+import {useSession, signIn, signOut} from "next-auth/react";
 import {useLanguage} from '@/contexts/LanguageContext';
 import {SettingsDropdown} from '@/components/SettingsDropdown';
 import {GitHubAppInstallOverlay} from '@/components/GitHubAppInstallOverlay';
@@ -932,10 +932,17 @@ export default function HomePage() {
 
     useEffect(() => {
         if (status === 'authenticated') {
+            // 세션 에러 체크 (토큰 리프레시 실패)
+            if (session?.error === 'RefreshAccessTokenError') {
+                console.log('Token refresh failed, signing out...');
+                signOut({ callbackUrl: '/' });
+                return;
+            }
+            
             checkGitHubAppInstall();
             fetchProjects();
         }
-    }, [status, checkGitHubAppInstall, fetchProjects]);
+    }, [status, session?.error, checkGitHubAppInstall, fetchProjects, signOut]);
 
     useEffect(() => {
         if (selectedProject) {

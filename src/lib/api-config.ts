@@ -1,23 +1,27 @@
+import { getSession } from 'next-auth/react';
+
 const API_BASE_URL = 'https://barim-api.vercel.app';
 
-// 토큰 리프레시 함수
+// 세션 갱신 및 토큰 확인 함수
 async function refreshToken(): Promise<string | null> {
   try {
-    // 서버에서 토큰 리프레시 API 호출
-    const response = await fetch('/api/auth/refresh', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      return data.access_token;
+    // NextAuth 세션을 강제로 갱신
+    const session = await getSession();
+    
+    // 세션 에러가 있으면 재로그인
+    if (session?.error === 'RefreshAccessTokenError') {
+      console.log('Session refresh failed, redirecting to login');
+      window.location.href = '/api/auth/signin';
+      return null;
+    }
+    
+    // 새로운 액세스 토큰 반환
+    if (session?.accessToken) {
+      return session.accessToken;
     }
 
-    // 리프레시 실패시 재로그인
-    console.log('Token refresh failed, redirecting to login');
+    // 세션이 없으면 재로그인
+    console.log('No session available, redirecting to login');
     window.location.href = '/api/auth/signin';
     return null;
   } catch (error) {
